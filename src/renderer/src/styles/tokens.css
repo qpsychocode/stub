@@ -1,0 +1,80 @@
+/* Design tokens: ticket-stub / transit-editorial. Two themes: paper (light) and carbon (dark). */
+
+:root {
+  --display: 'Unbounded', 'Onest', system-ui, sans-serif;
+  --ui: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  /* spacing scale: 4 / 8 / 12 / 16 / 24 / 32 */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  --r-card: 14px;
+  --r-socket: 18px;
+  --r-pill: 999px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur: 220ms;
+
+  --titlebar-h: 44px;
+  --rail-w: 132px; /* mirrored by RAIL_W in HarnessRail.tsx */
+}
+
+:root,
+:root[data-theme='paper'] {
+  color-scheme: light;
+  --bg: #e9e6df;
+  --surface: #f7f5f0;
+  --surface-2: #efece5;
+  --ink: #151412;
+  --muted: #6e6a62;
+  --line: rgba(21, 20, 18, 0.12);
+  --line-strong: rgba(21, 20, 18, 0.28);
+  --accent: #ff4f1f;
+  --on-accent: #151412;
+  --done: #9cc93a;
+  --done-ink: #587a0f;
+  --dot: rgba(21, 20, 18, 0.07);
+  --hatch: rgba(255, 79, 31, 0.07);
+  --accent-soft: rgba(255, 79, 31, 0.16);
+  --hover: rgba(21, 20, 18, 0.07);
+  --glass: rgba(247, 245, 240, 0.85);
+  --scrim: rgba(233, 230, 223, 0.55);
+  --grain-op: 0.08;
+  --shadow-card: 0 1px 0 rgba(21, 20, 18, 0.06), 0 8px 24px -12px rgba(21, 20, 18, 0.25);
+  --shadow-filter: drop-shadow(0 1px 0 rgba(21, 20, 18, 0.07)) drop-shadow(0 6px 8px rgba(21, 20, 18, 0.12));
+  --shadow-filter-hover: drop-shadow(0 1px 0 rgba(21, 20, 18, 0.08)) drop-shadow(0 10px 12px rgba(21, 20, 18, 0.18));
+  --shadow-filter-lift: drop-shadow(0 2px 0 rgba(21, 20, 18, 0.08)) drop-shadow(0 22px 22px rgba(21, 20, 18, 0.3));
+  --shadow-pop: 0 1px 0 rgba(21, 20, 18, 0.05), 0 24px 48px -16px rgba(21, 20, 18, 0.35);
+}
+
+:root[data-theme='carbon'] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface: #1c1b19;
+  --surface-2: #242320;
+  --ink: #eeebe4;
+  --muted: #8f8a80;
+  --line: rgba(238, 235, 228, 0.1);
+  --line-strong: rgba(238, 235, 228, 0.26);
+  --accent: #ff5a2a;
+  --on-accent: #151412;
+  --done: #b8e04f;
+  --done-ink: #b8e04f;
+  --dot: rgba(238, 235, 228, 0.07);
+  --hatch: rgba(255, 90, 42, 0.08);
+  --accent-soft: rgba(255, 90, 42, 0.22);
+  --hover: rgba(238, 235, 228, 0.08);
+  --glass: rgba(28, 27, 25, 0.85);
+  --scrim: rgba(18, 18, 17, 0.55);
+  --grain-op: 0.07;
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.4), 0 10px 28px -12px rgba(0, 0, 0, 0.7);
+  --shadow-filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+  --shadow-filter-hover: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6));
+  --shadow-filter-lift: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 22px 22px rgba(0, 0, 0, 0.7));
+  --shadow-pop: 0 1px 0 rgba(0, 0, 0, 0.4), 0 24px 56px -16px rgba(0, 0, 0, 0.8);
+}

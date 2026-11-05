@@ -1,0 +1,32 @@
+appId: com.qpsycho.stub
+productName: STUB
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+  - resources/icon.png
+asar: true
+asarUnpack:
+  - "**/node_modules/sherpa-onnx-*/**"
+extraResources:
+  - from: resources/winhelper.ps1
+    to: winhelper.ps1
+win:
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: dir
+      arch: [x64]
+nsis:
+  artifactName: STUB-Setup-${version}.${ext}
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+publish:
+  provider: github
+  owner: qpsychocode
+  repo: stub-releases
+  releaseType: release

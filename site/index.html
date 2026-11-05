@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ru" data-lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUB: голосовые тикеты для нейронок</title>
+<meta name="description" content="Надиктуй задачу, получи тикет и перетащи его в Claude, Codex или OpenCode. Открытое приложение для Windows, распознавание работает на компьютере.">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --display: 'Unbounded', 'Onest', system-ui, sans-serif;
+    --ui: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    --bg: #e9e6df; --surface: #f7f5f0; --surface-2: #efece5; --ink: #151412; --muted: #66625a;
+    --line: rgba(21, 20, 18, .14); --line-strong: rgba(21, 20, 18, .3);
+    --accent: #ff4f1f; --on-accent: #151412; --done: #9cc93a; --dot: rgba(21, 20, 18, .08);
+    --shadow: 0 1px 0 rgba(21, 20, 18, .06), 0 28px 60px -28px rgba(21, 20, 18, .45);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #121211; --surface: #1c1b19; --surface-2: #242320; --ink: #eeebe4; --muted: #9c978c;
+      --line: rgba(238, 235, 228, .12); --line-strong: rgba(238, 235, 228, .28);
+      --accent: #ff5a2a; --done: #b8e04f; --dot: rgba(238, 235, 228, .07);
+      --shadow: 0 1px 0 rgba(0, 0, 0, .4), 0 28px 60px -28px rgba(0, 0, 0, .85);
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 400 17px/1.55 var(--ui);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 22px 22px;
+  }
+  a { color: inherit; }
+  .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+  html[data-lang='ru'] [lang='en'], html[data-lang='en'] [lang='ru'] { display: none; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font: 800 18px/1 var(--display); letter-spacing: .02em; text-decoration: none; }
+  .brand img { width: 24px; height: 24px; }
+  nav { display: flex; align-items: center; gap: 6px; font: 400 12px/1 var(--mono); }
+  nav a, nav button { padding: 9px 11px; border: 0; border-radius: 9px; background: none; color: var(--ink); font: inherit; text-decoration: none; cursor: pointer; }
+  nav a:hover, nav button:hover { background: var(--line); }
+
+  .hero { padding-block: 44px 28px; }
+  h1 { max-width: 15em; margin: 0; font: 800 clamp(30px, 5.6vw, 62px)/1.08 var(--display); letter-spacing: -.02em; }
+  h1 em { color: var(--accent); font-style: normal; }
+  .lead { max-width: 37em; margin: 20px 0 0; font-size: clamp(17px, 2vw, 20px); color: var(--muted); }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 30px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 22px; border-radius: 14px; font: 600 16px/1.1 var(--ui); text-decoration: none; transition: transform .18s ease; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn svg { flex: none; }
+  .primary { background: var(--accent); color: var(--on-accent); }
+  .ghost { border: 1.5px solid var(--line-strong); }
+  .fine { margin: 14px 0 0; font: 400 12px/1.6 var(--mono); color: var(--muted); }
+
+  .demo { margin-block: 26px 0; }
+  .frame { overflow: hidden; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+  video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; }
+  figcaption { margin-top: 12px; font: 400 12px/1.6 var(--mono); color: var(--muted); }
+
+  h2 { margin: 72px 0 22px; font: 800 clamp(23px, 3.2vw, 34px)/1.15 var(--display); letter-spacing: -.01em; }
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .step {
+    --notch: 9px;
+    position: relative; padding: 20px 20px 22px; border-radius: 14px; background: var(--surface);
+    -webkit-mask: radial-gradient(circle var(--notch) at 0 56px, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 56px, #0000 98%, #000) right / 51% 100% no-repeat;
+    mask: radial-gradient(circle var(--notch) at 0 56px, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 56px, #0000 98%, #000) right / 51% 100% no-repeat;
+  }
+  .step b { display: block; height: 36px; font: 800 26px/1 var(--display); color: var(--accent); }
+  .step h3 { margin: 18px 0 6px; font: 600 18px/1.25 var(--ui); }
+  .step p { margin: 0; font-size: 15px; color: var(--muted); }
+
+  .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 44px; }
+  .feature { padding-block: 16px; border-top: 1px solid var(--line); }
+  .feature h3 { margin: 0 0 3px; font: 600 16px/1.3 var(--ui); }
+  .feature p { margin: 0; font-size: 15px; color: var(--muted); }
+
+  .get { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px; margin-top: 72px; padding: 30px; border-radius: 18px; background: var(--ink); color: var(--bg); }
+  .get h2 { margin: 0 0 6px; color: inherit; }
+  .get p { margin: 0; max-width: 34em; font-size: 15px; opacity: .78; }
+  .get .ghost { border-color: currentColor; }
+
+  footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-block: 34px; font: 400 12px/1.6 var(--mono); color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .steps, .features { grid-template-columns: minmax(0, 1fr); }
+    .hero { padding-block: 22px 16px; }
+    .btn { flex: 1 1 100%; }
+    .get { padding: 24px 20px; }
+    h2 { margin-top: 52px; }
+    nav a.hide-sm { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="#"><img src="icon.png" alt=""> STUB</a>
+    <nav>
+      <a class="hide-sm" href="#demo"><span lang="ru">Видео</span><span lang="en">Video</span></a>
+      <a href="https://github.com/qpsychocode/stub">GitHub</a>
+      <button type="button" id="lang" aria-label="Сменить язык / Switch language"><span lang="ru">EN</span><span lang="en">RU</span></button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1 lang="ru">Скажи задачу. <em>Кинь её</em> в нейронку.</h1>
+    <h1 lang="en">Say the task. <em>Drop it</em> into your AI.</h1>
+    <p class="lead" lang="ru">STUB превращает голос в тикет на доске. Потом ты перетаскиваешь его в Claude, Codex или OpenCode, и текст с картинками сам вставляется в окно. Распознавание работает на твоём компьютере.</p>
+    <p class="lead" lang="en">STUB turns your voice into a ticket on a board. Drag it into Claude, Codex or OpenCode and the text and pictures paste themselves into the window. Speech recognition runs on your own computer.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 21h16"/></svg>
+        <span lang="ru">Скачать для Windows</span><span lang="en">Download for Windows</span>
+      </a>
+      <a class="btn ghost" href="https://github.com/qpsychocode/stub">
+        <span lang="ru">Открытый код на GitHub</span><span lang="en">Open source on GitHub</span>
+      </a>
+    </div>
+    <p class="fine" lang="ru">STUB-Setup.exe · примерно 122 МБ · бесплатно, лицензия MIT<br>Установщик без цифровой подписи: Windows может предупредить. Тогда «Подробнее» → «Выполнить в любом случае».</p>
+    <p class="fine" lang="en">STUB-Setup.exe · about 122 MB · free, MIT license<br>The installer is not code-signed, so Windows may warn you. Choose “More info” → “Run anyway”.</p>
+  </section>
+
+  <figure class="demo" id="demo">
+    <div class="frame">
+      <video src="demo.mp4" poster="poster.jpg" controls muted loop playsinline preload="metadata" aria-label="Пример работы STUB / STUB in use"></video>
+    </div>
+    <figcaption lang="ru">Настоящий интерфейс STUB на тестовых данных: без звука, текст диктовки здесь подставлен заранее.</figcaption>
+    <figcaption lang="en">The real STUB interface on sample data: no sound, and the dictated text here is pre-filled.</figcaption>
+  </figure>
+
+  <h2 lang="ru">Как это работает</h2>
+  <h2 lang="en">How it works</h2>
+  <ol class="steps">
+    <li class="step"><b>01</b>
+      <h3 lang="ru">Надиктуй</h3><h3 lang="en">Dictate</h3>
+      <p lang="ru">Сочетание клавиш работает из любой программы. Текст появляется сразу, его можно править прямо на ходу.</p>
+      <p lang="en">The shortcut works from any app. Text appears right away, and you can edit it as you speak.</p></li>
+    <li class="step"><b>02</b>
+      <h3 lang="ru">Перетащи</h3><h3 lang="en">Drag</h3>
+      <p lang="ru">Брось тикет на гнездо нейронки или утащи за край окна прямо в нужное приложение.</p>
+      <p lang="en">Drop the ticket on an app's socket, or drag it past the window's edge straight into the app.</p></li>
+    <li class="step"><b>03</b>
+      <h3 lang="ru">Следи</h3><h3 lang="en">Track</h3>
+      <p lang="ru">STUB помнит, кто взял тикет, и переводит его в работу. Закончил — одна галочка, и он в «Готово».</p>
+      <p lang="en">STUB remembers who took the ticket and moves it to in progress. Finished? One tick and it is done.</p></li>
+  </ol>
+
+  <h2 lang="ru">Что внутри</h2>
+  <h2 lang="en">What's inside</h2>
+  <div class="features">
+    <div class="feature"><h3 lang="ru">Модели на выбор</h3><h3 lang="en">Choice of models</h3>
+      <p lang="ru">Скачивай и обновляй модели распознавания прямо в приложении: от 23 МБ до 453 МБ.</p><p lang="en">Download and update speech models in the app, from 23 MB to 453 MB.</p></div>
+    <div class="feature"><h3 lang="ru">Голос остаётся у тебя</h3><h3 lang="en">Your voice stays with you</h3>
+      <p lang="ru">Звук обрабатывается локально и никуда не отправляется.</p><p lang="en">Audio is processed locally and is not sent anywhere.</p></div>
+    <div class="feature"><h3 lang="ru">Проекты</h3><h3 lang="en">Projects</h3>
+      <p lang="ru">У каждого проекта своя вкладка и своя доска.</p><p lang="en">Every project gets its own tab and board.</p></div>
+    <div class="feature"><h3 lang="ru">Картинки в тикетах</h3><h3 lang="en">Pictures in tickets</h3>
+      <p lang="ru">Ctrl+V скриншота прямо во время записи, и он уйдёт в нейронку вместе с текстом.</p><p lang="en">Ctrl+V a screenshot while recording, and it goes to the AI along with the text.</p></div>
+    <div class="feature"><h3 lang="ru">Лимиты на виду</h3><h3 lang="en">Limits in sight</h3>
+      <p lang="ru">Остаток на 5 часов и на неделю у Claude и Codex и время до обновления.</p><p lang="en">What's left for 5 hours and the week on Claude and Codex, and time to reset.</p></div>
+    <div class="feature"><h3 lang="ru">Ничего не теряется</h3><h3 lang="en">Nothing gets lost</h3>
+      <p lang="ru">Локальная база, история изменений, корзина и ежедневные копии.</p><p lang="en">A local database, change history, a trash and daily backups.</p></div>
+  </div>
+
+  <section class="get">
+    <div>
+      <h2 lang="ru">Попробуй</h2><h2 lang="en">Try it</h2>
+      <p lang="ru">Нужна Windows. STUB обновляется сам, а модель распознавания скачивается в настройках при первом запуске.</p>
+      <p lang="en">Requires Windows. STUB updates itself, and you download a speech model in Settings on first launch.</p>
+    </div>
+    <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe"><span lang="ru">Скачать STUB</span><span lang="en">Download STUB</span></a>
+  </section>
+
+  <footer>
+    <span>MIT · <a href="https://github.com/qpsychocode/stub">github.com/qpsychocode/stub</a></span>
+    <span lang="ru">Независимый проект, не связан с Anthropic и OpenAI.</span>
+    <span lang="en">An independent project, not affiliated with Anthropic or OpenAI.</span>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement;
+    function apply(l) { root.dataset.lang = l; root.lang = l; }
+    var saved = null;
+    try { saved = localStorage.getItem('stub-lang'); } catch (e) {}
+    apply(saved || (/^ru|^uk|^be|^kk/i.test(navigator.language || '') ? 'ru' : 'en'));
+    document.getElementById('lang').addEventListener('click', function () {
+      var next = root.dataset.lang === 'ru' ? 'en' : 'ru';
+      apply(next);
+      try { localStorage.setItem('stub-lang', next); } catch (e) {}
+    });
+  })();
+</script>
+</body>
+</html>

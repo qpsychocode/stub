@@ -1,0 +1,236 @@
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: var(--scrim);
+  backdrop-filter: blur(3px);
+}
+
+.dock {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: var(--rail-w);
+  bottom: var(--s5);
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--s5);
+  pointer-events: none;
+}
+
+.capsule {
+  position: relative;
+  width: 560px;
+  max-width: 100%;
+  border: 1px solid var(--line-strong);
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+}
+.capsule[data-mode='rec'],
+.capsule[data-mode='review'] {
+  width: 680px;
+}
+
+/* ---------- idle ---------- */
+.cap-idle {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  height: 60px;
+  padding: 0 var(--s3) 0 var(--s2);
+}
+.mic-btn {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  transition: transform 160ms var(--ease), background var(--dur);
+}
+.mic-btn:hover {
+  transform: scale(1.06);
+}
+.mic-btn:active {
+  transform: scale(0.95);
+}
+.mic-btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  animation: mic-ring 2.8s var(--ease) infinite;
+}
+@keyframes mic-ring {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+.mic-btn[data-disabled='true'] {
+  background: var(--surface-2);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+}
+.mic-btn[data-disabled='true']::before {
+  display: none;
+}
+.mic-btn[data-disabled='true']:hover {
+  transform: none;
+}
+
+.cap-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.cap-title {
+  font: 600 14px/1.1 var(--ui);
+  white-space: nowrap;
+}
+.cap-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 260px;
+  font: 400 10px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.cap-sub > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cap-spacer {
+  flex: 1;
+}
+.ghost-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  height: 36px;
+  padding: 0 var(--s3) 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  font: 500 13px/1 var(--ui);
+  white-space: nowrap;
+  transition: background var(--dur);
+}
+.ghost-btn:hover {
+  background: var(--hover);
+}
+
+/* ---------- recording ---------- */
+.cap-rec,
+.cap-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s5);
+}
+.rec-top {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s4);
+  height: 56px;
+}
+.rec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: breathe 1s ease-in-out infinite;
+}
+.rec-badge[data-busy='true'] {
+  color: var(--muted);
+}
+.rec-badge[data-busy='true'] .rec-dot {
+  background: var(--muted);
+}
+.waveform {
+  display: block;
+  width: 100%;
+  height: 56px;
+}
+.rec-timer {
+  min-width: 48px;
+  font: 500 14px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.rec-edit {
+  display: block;
+  width: 100%;
+  min-height: 84px;
+  max-height: 140px;
+  field-sizing: content;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--accent);
+  font: 400 20px/1.4 var(--ui);
+  overflow-wrap: anywhere;
+}
+.rec-edit::placeholder {
+  color: var(--muted);
+}
+
+.rec-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.hint-mono {
+  font: 400 10px/1 var(--mono);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* ---------- review ---------- */
+.cap-review {
+  gap: var(--s3);
+}
+.review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s1);
+}
+.cap-review .is-body {
+  height: 124px;
+}
+.cap-review .rec-actions {
+  margin-top: var(--s1);
+}

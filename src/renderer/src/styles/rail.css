@@ -1,0 +1,342 @@
+.rail-slot {
+  position: relative;
+  grid-column: 2;
+  min-height: 0;
+}
+
+.rail {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--rail-w);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4) var(--s3);
+  overflow: hidden;
+  border-left: 1px solid var(--line);
+  background: var(--surface-2);
+  transition: box-shadow var(--dur) var(--ease);
+}
+.rail[data-wide='true'] {
+  box-shadow: -24px 0 48px -20px rgba(0, 0, 0, 0.3);
+}
+
+.rail-head {
+  flex: none;
+  height: 16px;
+  font: 400 9px/16px var(--mono);
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.rail-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s3);
+  min-height: 0;
+  margin: 0 -4px;
+  padding: 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.rail-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- socket ---------- */
+.socket {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 80px;
+  padding: var(--s3) var(--s2);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-socket);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.socket:hover {
+  border-color: var(--line-strong);
+}
+.socket[data-wide='true'] {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: var(--s3);
+  padding: 0 var(--s4);
+  text-align: left;
+}
+
+.socket-glyph {
+  flex: none;
+  display: grid;
+  place-items: center;
+  font: 700 18px/1 var(--display);
+  letter-spacing: -0.01em;
+}
+.socket[data-wide='true'] .socket-glyph {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  font-size: 15px;
+}
+.socket-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.socket-logo {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+.socket[data-wide='true'] .socket-text {
+  align-items: flex-start;
+}
+.socket-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 9px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.socket[data-wide='true'] .socket-name {
+  font: 600 14px/1.2 var(--ui);
+  letter-spacing: 0;
+  text-transform: none;
+  color: inherit;
+}
+.socket-hint {
+  display: none;
+  margin-top: 4px;
+  font: 400 9px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.socket[data-wide='true'] .socket-hint {
+  display: block;
+}
+
+/* ---------- plan limits: green is what is left ---------- */
+.limits {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  margin-top: 6px;
+}
+.limit {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 3px;
+  font: 400 8px/1 var(--mono);
+  color: var(--muted);
+}
+.limit-bar {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--line-strong);
+}
+.limit-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--done);
+  transition: width var(--dur) var(--ease);
+}
+.limit-pct {
+  text-align: right;
+  color: var(--ink);
+}
+.limit-none,
+.limit-signin {
+  margin-top: 6px;
+  font: 400 9px/1 var(--mono);
+  color: var(--muted);
+}
+.limit-signin {
+  padding: 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--ink);
+}
+.limit-signin:hover {
+  background: var(--hover);
+}
+.socket[data-over='true'] .limit,
+.socket[data-over='true'] .limit-pct {
+  color: inherit;
+}
+
+.socket-dot {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+}
+.socket-dot[data-on='true'] {
+  background: var(--done);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--done) 28%, transparent);
+}
+
+.socket-submit {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  color: var(--muted);
+  opacity: 0.7;
+  transition: background var(--dur), color var(--dur), opacity var(--dur);
+}
+.socket-submit:hover {
+  opacity: 1;
+  background: var(--hover);
+}
+.socket-submit[aria-pressed='true'] {
+  opacity: 1;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.socket-status {
+  position: absolute;
+  inset: -1.5px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--r-socket);
+  pointer-events: none;
+}
+.socket[data-state='sending'] .socket-status,
+.socket[data-state='ok'] .socket-status {
+  display: flex;
+  animation: status-in 160ms var(--ease);
+}
+.socket[data-state='sending'] .socket-status {
+  background: var(--ink);
+  color: var(--surface);
+}
+.socket[data-state='ok'] .socket-status {
+  background: var(--done);
+  color: #151412;
+}
+.socket-status-text {
+  font: 500 9px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@keyframes status-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+/* hovered while dragging: inverted */
+.socket[data-over='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent);
+  animation: none !important;
+}
+.socket[data-over='true'] .socket-glyph {
+  background: rgba(128, 128, 128, 0.25);
+}
+.socket[data-over='true'] .socket-name,
+.socket[data-over='true'] .socket-hint {
+  color: inherit;
+  opacity: 0.8;
+}
+.socket[data-over='true'] .socket-hint {
+  color: var(--accent);
+  opacity: 1;
+}
+.socket[data-over='true'] .socket-submit {
+  color: var(--surface);
+}
+
+.rail[data-wide='true'] .socket:not([data-over='true']) {
+  animation: socket-pulse 1.6s ease-in-out infinite;
+}
+@keyframes socket-pulse {
+  50% {
+    border-color: var(--accent);
+  }
+}
+
+/* ---------- add socket ---------- */
+.rail-add {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 48px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--r-socket);
+  color: var(--muted);
+  transition: color var(--dur), border-color var(--dur), background var(--dur);
+}
+.rail-add:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--hover);
+}
+.rail-add[data-wide='true'] {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail[data-wide='true'] .socket:not([data-over='true']) {
+    animation: none;
+  }
+}
+
+.socket[data-over='true'] .limit-bar {
+  background: rgba(128, 128, 128, 0.45);
+}
+
+.limit-reset {
+  grid-column: 2 / -1;
+  margin-top: -1px;
+  white-space: nowrap;
+}
+.socket[data-over='true'] .limit-reset {
+  opacity: 0.75;
+}
