@@ -4,7 +4,7 @@
 
 *A voice ticket board for working with AI apps. Dictate a task, get a ticket, drag it into Claude, Codex or OpenCode, and the text and pictures paste themselves into the window. Speech recognition runs locally. The app has a Russian and an English interface.*
 
-**[Скачать для Windows](https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe)**
+**[Скачать для Windows](https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe)** · [сайт и видео](https://stub-voice.vercel.app)
 
 Установщик без цифровой подписи, поэтому Windows может предупредить: «Подробнее» → «Выполнить в любом случае». Дальше STUB обновляется сам.
 
