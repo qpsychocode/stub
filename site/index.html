@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#121211">
 <title>STUB: личный тикет-борд, где ни один тикет не потеряется</title>
-<meta name="description" content="Твой личный тикет-борд. Надиктуй задачу голосом и отправь её в Claude, Codex или OpenCode. Открытое приложение для Windows и macOS (бета), распознавание работает на компьютере.">
+<meta name="description" content="Твой личный тикет-борд. Надиктуй задачу голосом и отправь её в Claude, Codex или OpenCode. Открытое приложение для Windows и macOS, распознавание работает на компьютере.">
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,20 +15,11 @@
     --display: 'Unbounded', 'Onest', system-ui, sans-serif;
     --ui: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-    --bg: #e9e6df; --surface: #f7f5f0; --surface-2: #efece5; --ink: #151412; --muted: #66625a;
-    --line: rgba(21, 20, 18, .14); --line-strong: rgba(21, 20, 18, .3);
-    --accent: #ff4f1f; --on-accent: #151412; --done: #9cc93a; --dot: rgba(21, 20, 18, .08);
-    --shadow: 0 1px 0 rgba(21, 20, 18, .06), 0 28px 60px -28px rgba(21, 20, 18, .45);
-    color-scheme: light;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
-      --bg: #121211; --surface: #1c1b19; --surface-2: #242320; --ink: #eeebe4; --muted: #9c978c;
-      --line: rgba(238, 235, 228, .12); --line-strong: rgba(238, 235, 228, .28);
-      --accent: #ff5a2a; --done: #b8e04f; --dot: rgba(238, 235, 228, .07);
-      --shadow: 0 1px 0 rgba(0, 0, 0, .4), 0 28px 60px -28px rgba(0, 0, 0, .85);
-      color-scheme: dark;
-    }
+    --bg: #121211; --surface: #1c1b19; --surface-2: #242320; --ink: #eeebe4; --muted: #9c978c;
+    --line: rgba(238, 235, 228, .12); --line-strong: rgba(238, 235, 228, .28);
+    --accent: #ff5a2a; --on-accent: #151412; --done: #b8e04f; --dot: rgba(238, 235, 228, .07);
+    --shadow: 0 1px 0 rgba(0, 0, 0, .4), 0 28px 60px -28px rgba(0, 0, 0, .85);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -58,6 +50,9 @@
   .primary { background: var(--accent); color: var(--on-accent); }
   .ghost { border: 1.5px solid var(--line-strong); }
   .fine { margin: 14px 0 0; font: 400 12px/1.6 var(--mono); color: var(--muted); }
+  .fine a { color: inherit; }
+  details.fine summary { width: fit-content; cursor: pointer; text-decoration: underline; }
+  details.fine p { margin: 6px 0 0; }
 
   .demo { margin-block: 26px 0; }
   .frame { overflow: hidden; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
@@ -81,7 +76,8 @@
   .feature h3 { margin: 0 0 3px; font: 600 16px/1.3 var(--ui); }
   .feature p { margin: 0; font-size: 15px; color: var(--muted); }
 
-  .get { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px; margin-top: 72px; padding: 30px; border-radius: 18px; background: var(--ink); color: var(--bg); }
+  .get { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px; margin-top: 72px; padding: 30px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); }
+  .get-btns { display: flex; flex-wrap: wrap; gap: 12px; }
   .get h2 { margin: 0 0 6px; color: inherit; }
   .get p { margin: 0; max-width: 34em; font-size: 15px; opacity: .78; }
   .get .ghost { border-color: currentColor; }
@@ -117,8 +113,12 @@
     <p class="lead" lang="en">Your personal ticket board for working with AI. Dictate a task and it is on the board. Drag it into Claude, Codex or OpenCode, and STUB remembers who took it. Speech recognition runs on your own computer.</p>
     <div class="cta">
       <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 21h16"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.469L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
         <span lang="ru">Скачать для Windows</span><span lang="en">Download for Windows</span>
+      </a>
+      <a class="btn primary" data-mac href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-arm64.dmg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+        <span lang="ru">Скачать для macOS</span><span lang="en">Download for macOS</span>
       </a>
       <a class="btn ghost" href="https://github.com/qpsychocode/stub">
         <span lang="ru">Открытый код на GitHub</span><span lang="en">Open source on GitHub</span>
@@ -126,16 +126,16 @@
     </div>
     <p class="fine" lang="ru">STUB-Setup.exe · примерно 125 МБ · бесплатно, лицензия MIT<br>Установщик без цифровой подписи: Windows может предупредить. Тогда «Подробнее» → «Выполнить в любом случае».</p>
     <p class="fine" lang="en">STUB-Setup.exe · about 125 MB · free, MIT license<br>The installer is not code-signed, so Windows may warn you. Choose “More info” → “Run anyway”.</p>
-    <p class="fine" lang="ru"><b>macOS, бета:</b> <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-arm64.dmg">Apple M</a> · <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-x64.dmg">Intel</a>. Проверена автоматически, на обычном Mac пока не обкатана. Выбор чата проекта только на Windows, новые версии ставятся вручную.<br>Без подписи Apple: «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть». Если пишет, что приложение повреждено: <code>xattr -cr /Applications/STUB.app</code></p>
-    <p class="fine" lang="en"><b>macOS, beta:</b> <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-arm64.dmg">Apple silicon</a> · <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-x64.dmg">Intel</a>. Tested automatically, not yet on an everyday Mac. Choosing a project's chat is Windows-only, and new versions are installed by hand.<br>Not signed by Apple: System Settings → Privacy &amp; Security → “Open Anyway”. If it says the app is damaged: <code>xattr -cr /Applications/STUB.app</code></p>
+    <details class="fine" lang="ru"><summary>Не открывается на Mac?</summary><p>«Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть». Если пишет, что приложение повреждено: <code>xattr -cr /Applications/STUB.app</code><br>Сборка для Mac на Intel: <a href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-x64.dmg">скачать</a>.</p></details>
+    <details class="fine" lang="en"><summary>Won't open on a Mac?</summary><p>System Settings → Privacy &amp; Security → “Open Anyway”. If it says the app is damaged: <code>xattr -cr /Applications/STUB.app</code><br>Build for Intel Macs: <a href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-x64.dmg">download</a>.</p></details>
   </section>
 
   <figure class="demo" id="demo">
     <div class="frame">
-      <video src="demo.mp4" poster="poster.jpg" controls muted loop playsinline preload="metadata" aria-label="Пример работы STUB / STUB in use"></video>
+      <video src="demo.mp4" poster="poster.jpg" controls loop playsinline preload="metadata" aria-label="Пример работы STUB / STUB in use"></video>
     </div>
-    <figcaption lang="ru">Настоящий интерфейс STUB на тестовых данных: без звука, текст диктовки здесь подставлен заранее.</figcaption>
-    <figcaption lang="en">The real STUB interface on sample data: no sound, and the dictated text here is pre-filled.</figcaption>
+    <figcaption lang="ru">Настоящий интерфейс STUB на тестовых данных: текст диктовки здесь подставлен заранее, музыка просто для фона.</figcaption>
+    <figcaption lang="en">The real STUB interface on sample data: the dictated text here is pre-filled, and the music is just background.</figcaption>
   </figure>
 
   <h2 lang="ru">Как это работает</h2>
@@ -179,10 +179,13 @@
   <section class="get">
     <div>
       <h2 lang="ru">Попробуй</h2><h2 lang="en">Try it</h2>
-      <p lang="ru">Нужна Windows или macOS (бета, ссылки вверху страницы). На Windows STUB обновляется сам, а модель распознавания скачивается в настройках при первом запуске.</p>
-      <p lang="en">Requires Windows or macOS (beta, links at the top of the page). On Windows STUB updates itself, and you download a speech model in Settings on first launch.</p>
+      <p lang="ru">Нужна Windows или macOS. На Windows STUB обновляется сам, а модель распознавания скачивается в настройках при первом запуске.</p>
+      <p lang="en">Requires Windows or macOS. On Windows STUB updates itself, and you download a speech model in Settings on first launch.</p>
     </div>
-    <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe"><span lang="ru">Скачать для Windows</span><span lang="en">Download for Windows</span></a>
+    <div class="get-btns">
+      <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe"><span lang="ru">Скачать для Windows</span><span lang="en">Download for Windows</span></a>
+      <a class="btn primary" data-mac href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-arm64.dmg"><span lang="ru">Скачать для macOS</span><span lang="en">Download for macOS</span></a>
+    </div>
   </section>
 
   <footer>
@@ -203,6 +206,20 @@
       apply(next);
       try { localStorage.setItem('stub-lang', next); } catch (e) {}
     });
+    // The macOS buttons lead to the Apple silicon build; an Intel Mac gets its own.
+    function useIntel() {
+      document.querySelectorAll('[data-mac]').forEach(function (a) { a.href = a.href.replace('-arm64.dmg', '-x64.dmg'); });
+    }
+    if (/Mac/.test(navigator.platform || '')) {
+      try {
+        var gl = document.createElement('canvas').getContext('webgl');
+        var info = gl && gl.getExtension('WEBGL_debug_renderer_info');
+        if (info && /Intel|AMD|Radeon/i.test(gl.getParameter(info.UNMASKED_RENDERER_WEBGL))) useIntel();
+      } catch (e) {}
+      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+        navigator.userAgentData.getHighEntropyValues(['architecture']).then(function (v) { if (v.architecture === 'x86') useIntel(); }).catch(function () {});
+      }
+    }
   })();
 </script>
 </body>
