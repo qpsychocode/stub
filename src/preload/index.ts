@@ -30,6 +30,18 @@ const api: StubApi = {
     sendToCursor: (req) => ipcRenderer.invoke(IPC.harnessDrop, req),
     detect: (targets) => ipcRenderer.invoke(IPC.harnessDetect, targets)
   },
+  terminals: {
+    available: () => ipcRenderer.invoke(IPC.termAvailable),
+    create: (kind, cwd, cols, rows) => ipcRenderer.invoke(IPC.termCreate, kind, cwd, cols, rows),
+    write: (id, data) => ipcRenderer.send(IPC.termWrite, id, data),
+    resize: (id, cols, rows) => ipcRenderer.send(IPC.termResize, id, cols, rows),
+    kill: (id) => ipcRenderer.send(IPC.termKill, id),
+    paste: (id, text, images, bracketed) => ipcRenderer.invoke(IPC.termPaste, id, text, images, bracketed),
+    onData: (cb) => subscribe<[string, string]>(IPC.termDataEvt, cb),
+    onExit: (cb) => subscribe<[string, number]>(IPC.termExitEvt, cb),
+    pickFolder: () => ipcRenderer.invoke(IPC.termPickFolder),
+    clone: (url, parent) => ipcRenderer.invoke(IPC.termClone, url, parent)
+  },
   updates: {
     state: () => ipcRenderer.invoke(IPC.updatesState),
     check: () => ipcRenderer.send(IPC.updatesCheck),

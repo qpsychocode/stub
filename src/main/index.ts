@@ -1,11 +1,12 @@
 import { app, BrowserWindow, clipboard, dialog, globalShortcut, ipcMain, session, shell } from 'electron'
 import { join } from 'node:path'
-import { IPC, type AppData, type AsrStatus, type HarnessTarget, type DropRequest, type SendRequest } from '@shared/contract'
+import { IPC, type AppData, type AsrStatus, type HarnessTarget, type DropRequest, type SendRequest, type TerminalKind } from '@shared/contract'
 import { AsrManager } from './asr'
 import { Harness } from './harness'
 import { addImage, imageDataUrl } from './images'
 import { readLimits, signInClaude } from './limits'
 import { cancelDownload, modelsState, removeModel, startDownload } from './models'
+import { availableTerminals, cloneRepo, createTerminal, hasLiveTerminals, killAllTerminals, killTerminal, pasteToTerminal, pickFolder, resizeTerminal, writeTerminal } from './terminals'
 import { checkForUpdates, installUpdate, startUpdates, updateState } from './updates'
 import { closeStore, dbPath, deletedTickets, loadData, saveData } from './store'
 
@@ -142,6 +143,16 @@ function registerIpc(): void {
   ipcMain.handle(IPC.harnessDrop, (_e, req: DropRequest) => harness.sendToCursor(req))
   ipcMain.handle(IPC.harnessDetect, (_e, targets: HarnessTarget[]) => harness.detect(targets))
 
+  ipcMain.handle(IPC.termAvailable, () => availableTerminals())
+  ipcMain.handle(IPC.termCreate, (_e, kind: TerminalKind, cwd: string, cols: number, rows: number) =>
+    createTerminal(kind, cwd, cols, rows, (channel, id, payload) => send(channel === 'data' ? IPC.termDataEvt : IPC.termExitEvt, id, payload))
+  )
+  ipcMain.on(IPC.termWrite, (_e, id: string, data: string) => writeTerminal(id, data))
+  ipcMain.on(IPC.termResize, (_e, id: string, cols: number, rows: number) => resizeTerminal(id, cols, rows))
+  ipcMain.on(IPC.termKill, (_e, id: string) => killTerminal(id))
+  ipcMain.handle(IPC.termPaste, (_e, id: string, text: string, images: string[], bracketed: boolean) => pasteToTerminal(id, text, images, bracketed))
+  ipcMain.handle(IPC.termPickFolder, () => pickFolder(mainWindow, 'STUB'))
+  ipcMain.handle(IPC.termClone, (_e, url: string, parent: string) => cloneRepo(url, parent))
   ipcMain.handle(IPC.updatesState, () => updateState())
   ipcMain.on(IPC.updatesCheck, () => void checkForUpdates())
   ipcMain.on(IPC.updatesInstall, () => installUpdate())
@@ -200,13 +211,22 @@ async function bootstrap(): Promise<void> {
   })
 }
 
-app.on('before-quit', () => {
+let terminalsDrained = false
+app.on('before-quit', (e) => {
   quitting = true
+  // Exiting while ConPTY is still tearing its consoles down crashes the process, so give them a moment first.
+  if (!terminalsDrained && hasLiveTerminals()) {
+    e.preventDefault()
+    terminalsDrained = true
+    killAllTerminals()
+    setTimeout(() => app.quit(), 700)
+  }
 })
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
   asr.dispose()
   harness.dispose()
+  killAllTerminals()
   closeStore()
 })
 app.on('window-all-closed', () => {

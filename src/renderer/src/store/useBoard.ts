@@ -41,6 +41,7 @@ export type BoardAction =
   | { type: 'project-delete'; id: string }
   | { type: 'project-activate'; id: string }
   | { type: 'project-chat'; id: string; targetId: string; chat: ChatBinding | null }
+  | { type: 'project-folder'; id: string; folder: string }
   | { type: 'delete'; id: string }
   | { type: 'restore'; ticket: Ticket }
   | { type: 'layout'; layout: Layout; movedId?: string }
@@ -87,6 +88,8 @@ function reducer(state: BoardState, action: BoardAction): BoardState {
       const projects = state.projects.filter((p) => p.id !== action.id)
       return { ...state, projects, activeProjectId: state.activeProjectId === action.id ? projects[0].id : state.activeProjectId }
     }
+    case 'project-folder':
+      return { ...state, projects: state.projects.map((p) => (p.id === action.id ? { ...p, folder: action.folder } : p)) }
     case 'project-chat':
       return {
         ...state,

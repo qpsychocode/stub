@@ -161,7 +161,7 @@ function write(d: DatabaseSync, data: AppData, createAction: string): void {
   meta.run('seq', String(data.seq))
   meta.run('activeProjectId', data.activeProjectId)
   meta.run('settings', JSON.stringify(data.settings))
-  meta.run('projectChats', JSON.stringify(Object.fromEntries(data.projects.filter((p) => p.chats).map((p) => [p.id, p.chats]))))
+  meta.run('projectData', JSON.stringify(Object.fromEntries(data.projects.map((p) => [p.id, { chats: p.chats, folder: p.folder }]))))
 }
 
 /** One consistent copy per day in <userData>/backups; a failed backup must not get in the way of saving. */
@@ -226,8 +226,8 @@ export async function loadData(): Promise<AppData> {
   sortLanesOldestFirstOnce(d)
   dropOrphanImages(d)
   const rows = d.prepare('SELECT data FROM tickets WHERE deleted_at IS NULL').all() as { data: string }[]
-  const chats = JSON.parse(getMeta(d, 'projectChats') ?? '{}') as Record<string, Project['chats']>
-  const projects = (d.prepare('SELECT id, name FROM projects ORDER BY position').all() as unknown as Project[]).map((p) => (chats[p.id] ? { ...p, chats: chats[p.id] } : p))
+  const extra = JSON.parse(getMeta(d, 'projectData') ?? '{}') as Record<string, Pick<Project, 'chats' | 'folder'>>
+  const projects = (d.prepare('SELECT id, name FROM projects ORDER BY position').all() as unknown as Project[]).map((p) => ({ ...p, ...extra[p.id] }))
   return {
     version: 1,
     seq: Number(getMeta(d, 'seq')),

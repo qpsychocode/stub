@@ -119,6 +119,18 @@ function createMockApi(): StubApi {
       },
       detect: async (targets: HarnessTarget[]) => Object.fromEntries(targets.map((t, i) => [t.id, i % 2 === 0]))
     },
+    terminals: {
+      available: async () => ({ claude: true, codex: true, opencode: true, shell: true }),
+      create: async () => crypto.randomUUID(),
+      write: () => undefined,
+      resize: () => undefined,
+      kill: () => undefined,
+      paste: async () => true,
+      onData: () => () => undefined,
+      onExit: () => () => undefined,
+      pickFolder: async () => 'C:\\demo\\project',
+      clone: async () => 'C:\\demo\\project'
+    },
     updates: {
       state: async () => ({ status: 'none', current: 'dev' }),
       check: () => undefined,

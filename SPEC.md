@@ -201,6 +201,9 @@ monospace serials, big outlined lane numerals. Calm, warm, tactile, confident; o
   an empty database and then left untouched. A failed write shows НЕ СОХРАНЕНО in the titlebar and retries every 5 s. A database or legacy file
   that cannot be read shows an error and quits; it is never replaced with an empty board.
 - Respect `prefers-reduced-motion` (disable rotations/springs).
+- Terminals: a panel right of the board, per project, opening in the project's folder (chosen locally or cloned from a link). Buttons start Claude,
+  Codex, OpenCode (from PATH, or the copy their desktop app keeps) or a plain PowerShell, through node-pty. A ticket dropped on the panel goes into the
+  active terminal without running: as one bracketed paste where the program supports it, otherwise as a single line; pictures become files whose paths join the text. Terminals last as long as the app runs.
 - Project chats: a project can name a chat per app (right-click its tab). Sending to that socket first opens the chat by pressing its button in the app's
   sidebar through UI Automation (`Get-ChatUi` in winhelper.ps1, which reads how the buttons relate rather than their wording) and confirms it from the
   window header. If that fails nothing is pasted and the text stays on the clipboard. Bindings go by section and title, so renaming a chat breaks one.

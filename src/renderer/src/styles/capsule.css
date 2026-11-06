@@ -10,7 +10,7 @@
   position: absolute;
   z-index: 30;
   left: 0;
-  right: var(--rail-w);
+  right: calc(var(--rail-w) + var(--term-w, 0px));
   bottom: var(--s5);
   display: flex;
   justify-content: center;

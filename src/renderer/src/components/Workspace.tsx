@@ -37,6 +37,7 @@ interface Props {
   /** Released outside the STUB window: goes to whatever window is under the cursor. */
   onSendOutside: (ticketId: string) => void
   onMoveToProject: (ticketId: string, projectId: string) => void
+  onSendToTerminal: (ticketId: string) => void
   onEdit: (id: string) => void
   onCopy: (id: string) => void
   onDelete: (id: string) => void
@@ -46,6 +47,8 @@ interface Props {
   rail: ReactNode
   /** Rendered inside the DndContext above the board (the project tabs). */
   tabs: ReactNode
+  /** Rendered beside the board, inside the DndContext, so tickets can be dropped on it. */
+  terminals: ReactNode
 }
 
 const EASE = 'cubic-bezier(.2,.8,.2,1)'
@@ -58,6 +61,7 @@ const FLY_SCALE = 0.3
 const isLane = (id: unknown): boolean => String(id).startsWith('lane:')
 const isSocket = (id: unknown): boolean => String(id).startsWith('socket:')
 const isProject = (id: unknown): boolean => String(id).startsWith('project:')
+const isTerminal = (id: unknown): boolean => String(id).startsWith('terminal:')
 const isOutside = (x: number, y: number): boolean => x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight
 
 function findContainer(id: unknown, layout: Layout): TicketStatus | null {
@@ -70,7 +74,7 @@ function sameLayout(a: Layout, b: Layout): boolean {
   return STATUSES.every((s) => a[s].length === b[s].length && a[s].every((id, i) => id === b[s][i]))
 }
 
-export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, onSendOutside, onMoveToProject, onEdit, onCopy, onDelete, onDone, onDraggingChange, rail, tabs }: Props): JSX.Element {
+export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, onSendOutside, onMoveToProject, onSendToTerminal, onEdit, onCopy, onDelete, onDone, onDraggingChange, rail, tabs, terminals }: Props): JSX.Element {
   const reduced = useReducedMotion()
   const base = useMemo(() => groupTickets(tickets), [tickets])
   const byId = useMemo(() => new Map(tickets.map((t) => [t.id, t])), [tickets])
@@ -117,6 +121,8 @@ export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, 
     if (socket) return [socket]
     const project = within.find((c) => isProject(c.id))
     if (project) return [project]
+    const terminal = within.find((c) => isTerminal(c.id))
+    if (terminal) return [terminal]
     const lane = within.find((c) => isLane(c.id))
     if (lane) {
       const ids = new Set(layoutRef.current[String(lane.id).slice(5) as TicketStatus])
@@ -127,7 +133,7 @@ export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, 
       }
       return [lane]
     }
-    return closestCorners({ ...probe, droppableContainers: args.droppableContainers.filter((c) => !isSocket(c.id) && !isProject(c.id)) })
+    return closestCorners({ ...probe, droppableContainers: args.droppableContainers.filter((c) => !isSocket(c.id) && !isProject(c.id) && !isTerminal(c.id)) })
   }
 
   const onDragStart = (e: DragStartEvent): void => {
@@ -141,7 +147,7 @@ export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, 
 
   const onDragOver = ({ active, over }: DragOverEvent): void => {
     if (!over) return
-    if (isSocket(over.id) || isProject(over.id)) {
+    if (isSocket(over.id) || isProject(over.id) || isTerminal(over.id)) {
       setOverStatus(null)
       return
     }
@@ -190,6 +196,11 @@ export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, 
     if (p && isOutside(p.x, p.y)) {
       finish()
       onSendOutside(String(active.id))
+      return
+    }
+    if (over && isTerminal(over.id)) {
+      finish()
+      onSendToTerminal(String(active.id))
       return
     }
     if (over && isProject(over.id)) {
@@ -268,24 +279,27 @@ export function Workspace({ tickets, now, freshId, sendingId, onLayout, onSend, 
       <div className="workspace">
         <div className="board-col">
           {tabs}
-          <div className="board">
-            {LANES.map((l) => (
-              <Lane
-                key={l.status}
-                {...l}
-                ids={current[l.status]}
-                byId={byId}
-                hot={overStatus === l.status}
-                dragging={activeId !== null}
-                now={now}
-                freshId={freshId}
-                sendingId={sendingId}
-                onEdit={onEdit}
-                onCopy={onCopy}
-                onDelete={onDelete}
-                onDone={onDone}
-              />
-            ))}
+          <div className="board-row">
+            <div className="board">
+              {LANES.map((l) => (
+                <Lane
+                  key={l.status}
+                  {...l}
+                  ids={current[l.status]}
+                  byId={byId}
+                  hot={overStatus === l.status}
+                  dragging={activeId !== null}
+                  now={now}
+                  freshId={freshId}
+                  sendingId={sendingId}
+                  onEdit={onEdit}
+                  onCopy={onCopy}
+                  onDelete={onDelete}
+                  onDone={onDone}
+                />
+              ))}
+            </div>
+            {terminals}
           </div>
         </div>
         {rail}

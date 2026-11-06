@@ -28,7 +28,10 @@ export interface Project {
   id: string
   name: string
   chats?: Record<string, ChatBinding> // by harness target id
+  folder?: string // where the project's terminals open
 }
+
+export type TerminalKind = 'claude' | 'codex' | 'opencode' | 'shell'
 
 export interface TicketImage {
   id: string // full picture lives in the database
@@ -254,6 +257,21 @@ export interface StubApi {
     /** Which targets currently have a window. Keyed by target id. */
     detect(targets: HarnessTarget[]): Promise<Record<string, boolean>>
   }
+  terminals: {
+    /** Which programs can be started here. */
+    available(): Promise<Record<TerminalKind, boolean>>
+    create(kind: TerminalKind, cwd: string, cols: number, rows: number): Promise<string>
+    write(id: string, data: string): void
+    resize(id: string, cols: number, rows: number): void
+    kill(id: string): void
+    /** Types a ticket in without running it. bracketed: the program takes pasted blocks. False: that terminal is gone. */
+    paste(id: string, text: string, images: string[], bracketed: boolean): Promise<boolean>
+    onData(cb: (id: string, data: string) => void): () => void
+    onExit(cb: (id: string, code: number) => void): () => void
+    pickFolder(): Promise<string | null>
+    /** Clones into a new folder inside `parent` and resolves with its path. */
+    clone(url: string, parent: string): Promise<string>
+  }
   updates: {
     state(): Promise<UpdateState>
     check(): void
@@ -314,6 +332,16 @@ export const IPC = {
   harnessDrop: 'harness:drop',
   harnessChats: 'harness:chats',
   harnessDetect: 'harness:detect',
+  termAvailable: 'term:available',
+  termCreate: 'term:create',
+  termWrite: 'term:write', // ipcRenderer.send
+  termResize: 'term:resize', // ipcRenderer.send
+  termKill: 'term:kill', // ipcRenderer.send
+  termPaste: 'term:paste',
+  termDataEvt: 'term:data', // main -> renderer
+  termExitEvt: 'term:exit', // main -> renderer
+  termPickFolder: 'term:pick-folder',
+  termClone: 'term:clone',
   updatesState: 'updates:state',
   updatesCheck: 'updates:check', // ipcRenderer.send
   updatesInstall: 'updates:install', // ipcRenderer.send

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { AnimatePresence } from 'motion/react'
-import { Plus } from 'lucide-react'
+import { Plus, SquareTerminal } from 'lucide-react'
 import type { ChatBinding, ChatList, HarnessTarget, Project } from '@shared/contract'
 import { api } from '../api'
 import { Select } from './ui'
@@ -19,6 +19,8 @@ interface Props {
   onDelete: (id: string) => void
   targets: HarnessTarget[]
   onBindChat: (id: string, targetId: string, chat: ChatBinding | null) => void
+  terminalOpen: boolean
+  onToggleTerminal: () => void
 }
 
 type Editing = { mode: 'edit'; id: string } | { mode: 'new' } | null
@@ -151,7 +153,7 @@ function ProjectEditor({ initial, isNew, deleteBlock, chats, onSave, onDelete, o
   )
 }
 
-export function ProjectTabs({ projects, activeId, counts, onActivate, onAdd, onRename, onDelete, targets, onBindChat }: Props): JSX.Element {
+export function ProjectTabs({ projects, activeId, counts, onActivate, onAdd, onRename, onDelete, targets, onBindChat, terminalOpen, onToggleTerminal }: Props): JSX.Element {
   const els = useRef<Record<string, HTMLElement | null>>({})
   const addRef = useRef<HTMLButtonElement>(null)
   const [editing, setEditing] = useState<Editing>(null)
@@ -201,6 +203,11 @@ export function ProjectTabs({ projects, activeId, counts, onActivate, onAdd, onR
           </Popover>
         )}
       </AnimatePresence>
+      <span className="pop-spacer" />
+      <button type="button" className="term-toggle" data-active={terminalOpen} aria-pressed={terminalOpen} onClick={onToggleTerminal}>
+        <SquareTerminal size={14} strokeWidth={1.75} />
+        <span>{tr('Терминал')}</span>
+      </button>
     </nav>
   )
 }

@@ -8,8 +8,11 @@ files:
   - package.json
   - resources/icon.png
 asar: true
+# Native modules ship N-API prebuilds; rebuilding would only demand Visual Studio.
+npmRebuild: false
 asarUnpack:
   - "**/node_modules/sherpa-onnx-*/**"
+  - "**/node_modules/node-pty/**"
 extraResources:
   - from: resources/winhelper.ps1
     to: winhelper.ps1

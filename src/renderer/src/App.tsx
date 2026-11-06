@@ -11,6 +11,8 @@ import { Titlebar } from './components/Titlebar'
 import { Workspace } from './components/Workspace'
 import { HarnessRail, type PendingConfirm } from './components/HarnessRail'
 import { ProjectTabs } from './components/ProjectTabs'
+import { TerminalPane } from './components/TerminalPane'
+import { activeTerminal, takesBlocks } from './lib/terminals'
 import { VoiceCapsule } from './components/VoiceCapsule'
 import { TicketSheet } from './components/TicketSheet'
 import { SettingsPopover } from './components/SettingsPopover'
@@ -327,6 +329,28 @@ export function App(): JSX.Element {
     [dispatch, toast]
   )
 
+  const [terminalOpen, setTerminalOpen] = useState(false)
+
+  const sendToTerminal = useCallback(
+    async (ticketId: string) => {
+      const s = stateRef.current
+      const ticket = s.tickets.find((t) => t.id === ticketId)
+      const term = ticket && activeTerminal(ticket.projectId)
+      if (!ticket || !term) return
+      const ok = await api.terminals.paste(term.id, buildPrompt(ticket), (ticket.images ?? []).map((i) => i.id), takesBlocks(term.id))
+      if (!ok) {
+        toast({ kind: 'warn', label: tr('ТЕРМИНАЛ'), text: tr('Этот терминал уже закрыт') })
+        return
+      }
+      const known = s.settings.targets.find((t) => t.id === term.kind)
+      const name = known?.name ?? tr('Терминал')
+      const folder = s.projects.find((p) => p.id === ticket.projectId)?.folder
+      dispatch({ type: 'sent', id: ticketId, record: { targetId: known?.id ?? 'app:terminal', targetName: name, at: Date.now(), verified: true, submitted: false, ...(folder ? { windowTitle: folder } : {}) } })
+      toast({ kind: 'ok', label: tr('В ТЕРМИНАЛЕ'), text: tr('{0}: текст вставлен, Enter за тобой', ticket.key) })
+    },
+    [dispatch, toast]
+  )
+
   const moveToProject = useCallback(
     (ticketId: string, projectId: string) => {
       const s = stateRef.current
@@ -399,6 +423,16 @@ export function App(): JSX.Element {
           onSend={(ticketId, targetId) => void sendTicket(ticketId, targetId)}
           onSendOutside={(ticketId) => void sendToCursor(ticketId)}
           onMoveToProject={moveToProject}
+          onSendToTerminal={(ticketId) => void sendToTerminal(ticketId)}
+          terminals={
+            <TerminalPane
+              open={terminalOpen}
+              project={projects.find((p) => p.id === activeProjectId) ?? projects[0]}
+              theme={settings.theme}
+              dragging={dragging}
+              onFolder={(id, folder) => dispatch({ type: 'project-folder', id, folder })}
+            />
+          }
           onEdit={setSheetId}
           onCopy={copyPrompt}
           onDelete={deleteTicket}
@@ -414,6 +448,8 @@ export function App(): JSX.Element {
               onRename={(id, name) => dispatch({ type: 'project-rename', id, name })}
               onDelete={(id) => dispatch({ type: 'project-delete', id })}
               targets={settings.targets}
+              terminalOpen={terminalOpen}
+              onToggleTerminal={() => setTerminalOpen((o) => !o)}
               onBindChat={(id, targetId, chat) => dispatch({ type: 'project-chat', id, targetId, chat })}
             />
           }
