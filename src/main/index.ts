@@ -1,6 +1,7 @@
 import { app, BrowserWindow, clipboard, dialog, globalShortcut, ipcMain, session, shell } from 'electron'
 import { join } from 'node:path'
-import { IPC, type AppData, type AsrStatus, type HarnessTarget, type DropRequest, type SendRequest, type TerminalKind } from '@shared/contract'
+import { IPC, type AgentWatch, type AppData, type AsrStatus, type HarnessTarget, type DropRequest, type SendRequest, type TerminalKind } from '@shared/contract'
+import { AgentWatcher } from './agents'
 import { AsrManager } from './asr'
 import { Harness } from './harness'
 import { addImage, imageDataUrl } from './images'
@@ -162,6 +163,9 @@ function registerIpc(): void {
   ipcMain.handle(IPC.modelsRemove, (_e, dir: string) => removeModel(dir))
   ipcMain.handle(IPC.imagesAdd, (_e, bytes: Uint8Array) => addImage(bytes))
   ipcMain.handle(IPC.imagesGet, (_e, id: string) => imageDataUrl(id))
+  const agents = new AgentWatcher((ticketId, status) => send(IPC.agentsStatusEvt, ticketId, status))
+  ipcMain.on(IPC.agentsWatch, (_e, list: AgentWatch[]) => agents.setWatches(list))
+  app.on('before-quit', () => agents.stop())
   ipcMain.handle(IPC.limitsRead, () => readLimits())
   ipcMain.handle(IPC.limitsSignInClaude, () => signInClaude(mainWindow))
 

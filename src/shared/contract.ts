@@ -10,6 +10,7 @@ export interface SendRecord {
   verified: boolean // true = paste confirmed by UI Automation or by the user
   submitted: boolean // Enter was pressed after paste
   windowTitle?: string // window the ticket landed in, when dragged out of STUB
+  prompt?: string // start of the text as sent, without whitespace: how its session is recognised
 }
 
 /** Which chat of an app a project's tickets go to. title null: a new session in that section. */
@@ -53,6 +54,19 @@ export interface Ticket {
   updatedAt: number
   sentTo: SendRecord[]
   images?: TicketImage[]
+  agentOff?: boolean // the user put it back in progress by hand, so its session no longer moves it
+}
+
+/** How the session working on a sent ticket is going. */
+export interface AgentStatus {
+  state: 'working' | 'waiting' | 'finished'
+  reason?: 'question' | 'permission' | 'error' | 'stopped' // why it waits
+}
+
+export interface AgentWatch {
+  ticketId: string
+  sentAt: number
+  key: string // SendRecord.prompt
 }
 
 export interface HarnessTarget {
@@ -131,6 +145,7 @@ export interface AppSettings {
   language: string // 'auto' | 'ru' | 'en' ... passed to the ASR stream
   modelDir: string // '' = auto-detect from Beautiful Voice
   returnFocus: boolean // bring STUB back to front after sending to a harness
+  doneSound: boolean // chime when a ticket reaches Done
   targets: HarnessTarget[]
 }
 
@@ -202,6 +217,13 @@ export function buildPrompt(t: Pick<Ticket, 'title' | 'body'>): string {
   return `${title}\n\n${body}`
 }
 
+const PROMPT_KEY_LENGTH = 200
+
+/** What a session log is searched for. Whitespace goes, since pasting into a terminal changes it. */
+export function promptKeyOf(text: string): string {
+  return text.replace(/\s+/g, '').slice(0, PROMPT_KEY_LENGTH)
+}
+
 export const DEFAULT_TARGETS: HarnessTarget[] = [
   { id: 'claude', name: 'Claude Code', glyph: 'CC', processNames: ['claude'], submit: false, builtin: true },
   { id: 'opencode', name: 'OpenCode', glyph: 'OC', processNames: ['OpenCode'], submit: false, builtin: true },
@@ -220,6 +242,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   language: 'auto',
   modelDir: '',
   returnFocus: false,
+  doneSound: true,
   targets: DEFAULT_TARGETS
 }
 
@@ -293,6 +316,11 @@ export interface StubApi {
     /** The full picture as a data: URL. */
     get(id: string): Promise<string | null>
   }
+  agents: {
+    /** The tickets to follow; replaces the previous list. */
+    watch(list: AgentWatch[]): void
+    onStatus(cb: (ticketId: string, status: AgentStatus) => void): () => void
+  }
   limits: {
     /** Current plan limits, keyed by harness target id. */
     read(): Promise<Record<string, HarnessLimits>>
@@ -353,6 +381,8 @@ export const IPC = {
   modelsEvt: 'models:evt', // main -> renderer
   imagesAdd: 'images:add',
   imagesGet: 'images:get',
+  agentsWatch: 'agents:watch', // ipcRenderer.send
+  agentsStatusEvt: 'agents:status', // main -> renderer
   limitsRead: 'limits:read',
   limitsSignInClaude: 'limits:signin-claude',
   clipboardWrite: 'clipboard:write', // ipcRenderer.send

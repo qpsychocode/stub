@@ -148,6 +148,10 @@ function createMockApi(): StubApi {
       add: async () => ({ id: crypto.randomUUID(), thumb: '', width: 1, height: 1 }),
       get: async () => null
     },
+    agents: {
+      watch: () => undefined,
+      onStatus: () => () => undefined
+    },
     limits: {
       read: async () => ({
         claude: { status: 'ok', windows: [{ kind: 'five_hour', usedPercent: 65, resetsAt: Date.now() + 5160000 }, { kind: 'weekly', usedPercent: 51, resetsAt: Date.now() + 86400000 }] },

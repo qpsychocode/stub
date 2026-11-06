@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import { IPC, type StubApi } from '@shared/contract'
+import { IPC, type AgentStatus, type StubApi } from '@shared/contract'
 
 function subscribe<T extends unknown[]>(channel: string, cb: (...args: T) => void): () => void {
   const handler = (_e: IpcRendererEvent, ...args: unknown[]): void => cb(...(args as T))
@@ -58,6 +58,10 @@ const api: StubApi = {
   images: {
     add: (bytes) => ipcRenderer.invoke(IPC.imagesAdd, bytes),
     get: (id) => ipcRenderer.invoke(IPC.imagesGet, id)
+  },
+  agents: {
+    watch: (list) => ipcRenderer.send(IPC.agentsWatch, list),
+    onStatus: (cb) => subscribe<[string, AgentStatus]>(IPC.agentsStatusEvt, cb)
   },
   limits: {
     read: () => ipcRenderer.invoke(IPC.limitsRead),

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { playDoneSound } from '../lib/sound'
 import { DEFAULT_SETTINGS, type AppSettings, type AsrStatus, type DeletedTicket, type Ticket, type UpdateState } from '@shared/contract'
 import { api } from '../api'
 import { acceleratorFromEvent, relTime } from '../lib/format'
@@ -171,6 +172,22 @@ export function SettingsPopover({ settings, asr, onChange, onAsr, onRestoreTicke
             { value: 'en', label: 'English' }
           ]}
           onChange={(uiLanguage) => onChange({ uiLanguage })}
+        />
+      </div>
+
+      <div className="field">
+        <span className="field-label">{tr('Звук готового тикета')}</span>
+        <Segmented
+          label={tr('Звук готового тикета')}
+          value={settings.doneSound === false ? 'off' : 'on'}
+          options={[
+            { value: 'on', label: tr('Вкл') },
+            { value: 'off', label: tr('Выкл') }
+          ]}
+          onChange={(v) => {
+            onChange({ doneSound: v === 'on' })
+            if (v === 'on') playDoneSound()
+          }}
         />
       </div>
 

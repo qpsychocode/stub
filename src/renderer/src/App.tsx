@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
-import { buildPrompt, DEFAULT_SETTINGS, type AppSettings, type DropResult, type HarnessLimits, type UpdateState, type AsrState, type AsrStatus, type HarnessTarget, type SendResult } from '@shared/contract'
+import { buildPrompt, DEFAULT_SETTINGS, type AgentStatus, type AgentWatch, type AppSettings, type DropResult, type HarnessLimits, type UpdateState, type AsrState, type AsrStatus, type HarnessTarget, type SendResult } from '@shared/contract'
 import { api } from './api'
 import { setLanguage, tr } from './lib/i18n'
 import { useBoard } from './store/useBoard'
 import { useDictation, type Draft } from './store/useDictation'
 import { useNow } from './lib/useNow'
+import { playDoneSound } from './lib/sound'
 import { matchesAccelerator } from './lib/format'
 import { Titlebar } from './components/Titlebar'
 import { Workspace } from './components/Workspace'
 import { HarnessRail, type PendingConfirm } from './components/HarnessRail'
 import { ProjectTabs } from './components/ProjectTabs'
 import { TerminalPane } from './components/TerminalPane'
+import { AgentStatusContext } from './components/TicketCard'
 import { activeTerminal, takesBlocks } from './lib/terminals'
 import { VoiceCapsule } from './components/VoiceCapsule'
 import { TicketSheet } from './components/TicketSheet'
@@ -227,6 +229,41 @@ export function App(): JSX.Element {
 
   const markDone = useCallback((id: string) => dispatch({ type: 'update', id, patch: { status: 'done' } }), [dispatch])
 
+  // ---- what the sessions working on sent tickets are doing
+  const [agentStatus, setAgentStatus] = useState<Record<string, AgentStatus>>({})
+  const watchList = useMemo(() => {
+    const list: AgentWatch[] = []
+    for (const t of tickets) {
+      const last = t.sentTo[t.sentTo.length - 1]
+      if (t.status === 'doing' && !t.agentOff && last?.prompt) list.push({ ticketId: t.id, sentAt: last.at, key: last.prompt })
+    }
+    return JSON.stringify(list)
+  }, [tickets])
+  useEffect(() => {
+    if (state.ready) api.agents.watch(JSON.parse(watchList) as AgentWatch[])
+  }, [state.ready, watchList])
+  useEffect(
+    () =>
+      api.agents.onStatus((ticketId, status) => {
+        setAgentStatus((cur) => ({ ...cur, [ticketId]: status }))
+        if (status.state !== 'finished') return
+        const t = stateRef.current.tickets.find((x) => x.id === ticketId)
+        if (t?.status !== 'doing') return
+        dispatch({ type: 'update', id: ticketId, patch: { status: 'done' } })
+        toast({ kind: 'ok', label: tr('ГОТОВО'), text: tr('{0}: {1} закончил работу', t.key, t.sentTo[t.sentTo.length - 1]?.targetName ?? '') })
+      }),
+    [dispatch, toast]
+  )
+
+  // A ticket reaching Done chimes, however it got there.
+  const doneBefore = useRef<Map<string, boolean> | null>(null)
+  useEffect(() => {
+    if (!state.ready) return
+    const before = doneBefore.current
+    if (before && settings.doneSound !== false && tickets.some((t) => t.status === 'done' && before.get(t.id) === false)) playDoneSound()
+    doneBefore.current = new Map(tickets.map((t) => [t.id, t.status === 'done']))
+  }, [state.ready, tickets, settings.doneSound])
+
   // ---- send flow
   const [sending, setSending] = useState<{ ticketId: string; targetId: string } | null>(null)
   const [pending, setPending] = useState<(PendingConfirm & { ticketId: string; submitted: boolean }) | null>(null)
@@ -414,6 +451,7 @@ export function App(): JSX.Element {
         onToggleSettings={() => setSettingsOpen((o) => !o)}
       />
       <main className="stage">
+        <AgentStatusContext.Provider value={agentStatus}>
         <Workspace
           tickets={boardTickets}
           now={now}
@@ -469,6 +507,7 @@ export function App(): JSX.Element {
             />
           }
         />
+        </AgentStatusContext.Provider>
         <VoiceCapsule d={dict} asr={asr} hotkey={settings.hotkey} voiceKey={settings.voiceKey ?? DEFAULT_SETTINGS.voiceKey} />
       </main>
 

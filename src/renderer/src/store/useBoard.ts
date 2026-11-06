@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type Dispatch } from 'react'
-import { DEFAULT_PROJECT, DEFAULT_SETTINGS, type AppData, type AppSettings, type ChatBinding, type Project, type SendRecord, type Ticket, type TicketImage, type TicketStatus } from '@shared/contract'
+import { buildPrompt, DEFAULT_PROJECT, DEFAULT_SETTINGS, promptKeyOf, type AppData, type AppSettings, type ChatBinding, type Project, type SendRecord, type Ticket, type TicketImage, type TicketStatus } from '@shared/contract'
 import { api } from '../api'
 import { tr } from '../lib/i18n'
 
@@ -138,6 +138,7 @@ function reducer(state: BoardState, action: BoardAction): BoardState {
           : {
               ...t,
               ...p,
+              ...(statusChanged && p.status === 'doing' ? { agentOff: true } : {}),
               order: statusChanged ? orderByAge(state.tickets, p.status as TicketStatus, t.createdAt, t.id) : t.order,
               updatedAt: Date.now()
             }
@@ -168,7 +169,8 @@ function reducer(state: BoardState, action: BoardAction): BoardState {
           const t = byId.get(id)
           if (!t || seen.has(id)) return
           seen.add(id)
-          next.push({ ...t, status, order: i, updatedAt: t.status !== status ? Date.now() : t.updatedAt })
+          const backInProgress = status === 'doing' && t.status !== 'doing'
+          next.push({ ...t, ...(backInProgress ? { agentOff: true } : {}), status, order: i, updatedAt: t.status !== status ? Date.now() : t.updatedAt })
         })
       }
       for (const t of state.tickets) if (!seen.has(t.id)) next.push(t)
@@ -190,7 +192,8 @@ function reducer(state: BoardState, action: BoardAction): BoardState {
               ...t,
               status: 'doing' as const,
               order: orderByAge(state.tickets, 'doing', t.createdAt, t.id),
-              sentTo: [...t.sentTo, action.record],
+              agentOff: false,
+              sentTo: [...t.sentTo, { ...action.record, prompt: promptKeyOf(buildPrompt(t)) }],
               updatedAt: Date.now()
             }
           : t
@@ -201,7 +204,13 @@ function reducer(state: BoardState, action: BoardAction): BoardState {
       const last = state.past[state.past.length - 1]
       if (!last) return state
       // Its project may have been deleted since this snapshot; a ticket must never end up on no board.
-      const tickets = last.tickets.map((t) => (state.projects.some((p) => p.id === t.projectId) ? t : { ...t, projectId: state.activeProjectId }))
+      const nowDoing = new Map(state.tickets.map((t) => [t.id, t.status === 'doing']))
+      const tickets = last.tickets.map((t) => ({
+        ...t,
+        ...(state.projects.some((p) => p.id === t.projectId) ? {} : { projectId: state.activeProjectId }),
+        // Taken back from Done: its finished session must not move it there again.
+        ...(t.status === 'doing' && nowDoing.get(t.id) === false ? { agentOff: true } : {})
+      }))
       return { ...state, tickets, past: state.past.slice(0, -1) }
     }
     case 'settings':

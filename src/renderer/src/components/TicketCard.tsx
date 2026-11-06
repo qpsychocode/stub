@@ -1,12 +1,22 @@
-import { forwardRef, memo, useState, type KeyboardEvent } from 'react'
+import { createContext, forwardRef, memo, useContext, useState, type KeyboardEvent } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { motion } from 'motion/react'
 import { ArrowRight, Check, Copy, Image as ImageIcon, Loader2, Mic, Pencil, Trash2 } from 'lucide-react'
-import type { Ticket } from '@shared/contract'
+import type { AgentStatus, Ticket } from '@shared/contract'
 import { clock, previewOf, relTime } from '../lib/format'
 import { HarnessLogo, hasLogo } from './HarnessLogo'
 import { tr } from '../lib/i18n'
+
+/** What the sessions working on sent tickets are doing, by ticket id. */
+export const AgentStatusContext = createContext<Record<string, AgentStatus>>({})
+
+const WAIT_LABELS: Record<NonNullable<AgentStatus['reason']>, string> = {
+  question: 'Ждёт ответа',
+  permission: 'Ждёт разрешения',
+  error: 'Сессия с ошибкой',
+  stopped: 'Сессия остановлена'
+}
 
 interface BodyProps {
   ticket: Ticket
@@ -39,9 +49,11 @@ function CardBody({ ticket: t, now, ghost, sending, confirming, onEdit, onCopy, 
   const preview = previewOf(t.title, t.body)
   const sent = t.sentTo.slice(-2)
   const extra = t.sentTo.length - sent.length
+  const agent = useContext(AgentStatusContext)[t.id]
+  const waiting = t.status === 'doing' && !t.agentOff && agent?.state === 'waiting' ? WAIT_LABELS[agent.reason ?? 'question'] : null
   return (
     <div className="stub-wrap">
-      <div className="stub" data-status={t.status} data-ghost={ghost ? 'true' : undefined} data-sending={sending ? 'true' : undefined}>
+      <div className="stub" data-status={t.status} data-ghost={ghost ? 'true' : undefined} data-sending={sending ? 'true' : undefined} data-attention={waiting ? 'true' : undefined}>
         {t.status === 'doing' && <span className="stub-bar" />}
         <div className="stub-main">
           <div className="stub-meta">
@@ -58,6 +70,12 @@ function CardBody({ ticket: t, now, ghost, sending, confirming, onEdit, onCopy, 
           </div>
           <h3 className="stub-title">{t.title}</h3>
           {preview && <p className="stub-text">{preview}</p>}
+          {waiting && (
+            <div className="stub-attention" role="status">
+              <span className="stub-attention-dot" />
+              {tr(waiting)}
+            </div>
+          )}
         </div>
         {t.status === 'done' && <span className="stamp">{tr('ГОТОВО')}</span>}
         {t.status === 'doing' && !sending && !confirming && (
