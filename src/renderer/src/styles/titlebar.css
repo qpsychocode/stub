@@ -51,6 +51,14 @@
   width: var(--s3);
 }
 
+.tb-version {
+  padding-left: var(--s2);
+  font: 400 10px/1 var(--mono);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .model-pill {
   display: inline-flex;
   align-items: center;

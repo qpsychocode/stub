@@ -6,7 +6,7 @@ import type { Dictation } from '../store/useDictation'
 import { ImageStrip, imageFiles, useImagePaste } from './ImageStrip'
 import { formatTimer, keycaps } from '../lib/format'
 import { Keycaps, Segmented } from './ui'
-import { Waveform } from './Waveform'
+import { Waveform } from './Waveform'
 import { tr } from '../lib/i18n'
 
 interface Props {
@@ -112,7 +112,7 @@ export function VoiceCapsule({ d, asr, hotkey, voiceKey }: Props): JSX.Element {
                   onClick={() => void d.start()}
                   aria-label={tr('Начать диктовку')}
                 >
-                  <Mic size={20} strokeWidth={1.75} />
+                  <Mic size={15} strokeWidth={1.75} />
                 </button>
                 <div className="cap-copy">
                   <span className="cap-title">{tr('Надиктуй задачу')}</span>

@@ -20,7 +20,7 @@
 
 .capsule {
   position: relative;
-  width: 560px;
+  width: 440px;
   max-width: 100%;
   border: 1px solid var(--line-strong);
   background: var(--glass);
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   gap: var(--s3);
-  height: 60px;
+  height: 42px;
   padding: 0 var(--s3) 0 var(--s2);
 }
 .mic-btn {
@@ -46,8 +46,8 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--accent);
   color: var(--on-accent);
@@ -94,11 +94,11 @@
 .cap-copy {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 .cap-title {
-  font: 600 14px/1.1 var(--ui);
+  font: 600 13px/1.1 var(--ui);
   white-space: nowrap;
 }
 .cap-sub {
@@ -125,8 +125,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s2);
-  height: 36px;
-  padding: 0 var(--s3) 0 var(--s3);
+  height: 28px;
+  padding: 0 var(--s2);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-pill);
   font: 500 13px/1 var(--ui);

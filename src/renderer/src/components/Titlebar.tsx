@@ -85,6 +85,7 @@ export function Titlebar({ asr, displayState, saveError, update, theme, settings
         <button type="button" ref={settingsRef} className="tb-btn" data-active={settingsOpen} onClick={onToggleSettings} aria-label={tr('Настройки')} aria-expanded={settingsOpen}>
           <Settings size={16} strokeWidth={1.5} />
         </button>
+        {update.current && <span className="tb-version">v{update.current}</span>}
 
         <span className="tb-gap" />
 
