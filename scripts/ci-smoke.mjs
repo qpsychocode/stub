@@ -33,7 +33,7 @@ const tryHelper = (name, req, judge) => {
   }
 }
 console.log('Finder running:', execFileSync('sh', ['-c', 'pgrep -x Finder || echo no'], { encoding: 'utf8' }).trim())
-tryHelper('helper sees running apps', { cmd: 'ping' }, (o) => o.running > 0)
+tryHelper('helper sees regular apps', { cmd: 'ping' }, (o) => o.regular.some((a) => a.startsWith('Finder#')))
 
 const profile = mkdtempSync(join(tmpdir(), 'stub-smoke-'))
 const folder = mkdtempSync(join(tmpdir(), 'stub-project-'))
@@ -76,7 +76,16 @@ try {
   const found = tryHelper('helper finds a running app', { cmd: 'find', processNames: ['STUB'] }, (o) => o.hwnd === app.pid)
   console.log('helper found', found?.hwnd, 'app pid', app.pid)
   tryHelper('helper detect', { cmd: 'detect', targets: [{ id: 'me', processNames: ['stub'] }, { id: 'none', processNames: ['NoSuchApp'] }] }, (o) => o.found.me === true && o.found.none === false)
+  const seen = tryHelper('helper sees STUB\'s window', { cmd: 'ping' }, (o) => o.windows.some((w) => w.pid === app.pid))
+  const mine = seen?.windows.find((w) => w.pid === app.pid)
   tryHelper('helper atCursor answers', { cmd: 'atCursor' }, () => true)
+  // The window lookup itself, at a known spot: a mouse over STUB's window must resolve to STUB.
+  if (mine) {
+    const m = seen.mouse
+    const over = m.x >= mine.b.X && m.x < mine.b.X + mine.b.Width && m.y >= mine.b.Y && m.y < mine.b.Y + mine.b.Height
+    console.log('mouse', m, 'window', mine.b, 'over it:', over)
+    if (over) tryHelper('helper atCursor resolves the window', { cmd: 'atCursor' }, (o) => o.hwnd === app.pid)
+  }
   check('board shows', (await js(`document.querySelectorAll('.lane').length`)) === 3)
   check('platform class', (await js(`document.documentElement.dataset.platform`)) === 'mac')
   check('no window buttons of ours', (await js(`getComputedStyle(document.querySelector('.win-btn')).display`)) === 'none')

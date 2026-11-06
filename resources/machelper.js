@@ -9,6 +9,8 @@ const CG_ON_SCREEN_ONLY = 1
 const CG_EXCLUDE_DESKTOP = 16
 const KEY_RETURN = 36
 
+// The bridge hands numbers over as wrapped values that only look like numbers: "0" !== 0.
+const num = (v) => Number(ObjC.unwrap(v))
 const text = (ns) => {
   const s = ObjC.unwrap(ns)
   return typeof s === 'string' ? s : ''
@@ -18,11 +20,12 @@ const text = (ns) => {
 function apps() {
   const list = $.NSWorkspace.sharedWorkspace.runningApplications
   const out = []
-  for (let i = 0; i < list.count; i++) {
+  const count = num(list.count)
+  for (let i = 0; i < count; i++) {
     const a = list.objectAtIndex(i)
-    if (a.activationPolicy !== 0) continue
+    if (num(a.activationPolicy) !== 0) continue
     const url = a.executableURL
-    out.push({ pid: a.processIdentifier, name: text(a.localizedName), exe: url.isNil() ? '' : text(url.lastPathComponent) })
+    out.push({ pid: num(a.processIdentifier), name: text(a.localizedName), exe: url.isNil() ? '' : text(url.lastPathComponent) })
   }
   return out
 }
@@ -32,7 +35,7 @@ function findApp(names) {
   return apps().find((a) => wanted.includes(a.name.toLowerCase()) || wanted.includes(a.exe.toLowerCase())) || null
 }
 
-const frontmostPid = () => $.NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier
+const frontmostPid = () => num($.NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier)
 const systemEvents = () => Application('System Events')
 
 function focus(pid) {
@@ -88,18 +91,24 @@ function pasteInto(pid, windowTitle, req) {
   return { ok: true, outcome: verified ? 'verified' : 'unverified', submitted, windowTitle, readable }
 }
 
+function onScreenWindows() {
+  return ObjC.deepUnwrap($.CGWindowListCopyWindowInfo(CG_ON_SCREEN_ONLY | CG_EXCLUDE_DESKTOP, 0)) || []
+}
+
+/** Mouse position with the origin at the top left, the way window bounds are measured. */
+function mousePoint() {
+  const mouse = $.NSEvent.mouseLocation
+  return { x: num(mouse.x), y: num($.NSScreen.screens.objectAtIndex(0).frame.size.height) - num(mouse.y) }
+}
+
 /** The frontmost normal window under the mouse. Its title needs Screen Recording, so it may be empty. */
 function atCursor() {
-  const mouse = $.NSEvent.mouseLocation
-  const screenHeight = $.NSScreen.screens.objectAtIndex(0).frame.size.height
-  const x = mouse.x
-  const y = screenHeight - mouse.y
-  const windows = ObjC.deepUnwrap($.CGWindowListCopyWindowInfo(CG_ON_SCREEN_ONLY | CG_EXCLUDE_DESKTOP, 0)) || []
-  for (const w of windows) {
+  const { x, y } = mousePoint()
+  for (const w of onScreenWindows()) {
     const b = w.kCGWindowBounds
-    if (w.kCGWindowLayer !== 0 || !b) continue
-    if (x >= b.X && x < b.X + b.Width && y >= b.Y && y < b.Y + b.Height) {
-      return { ok: true, hwnd: w.kCGWindowOwnerPID, proc: w.kCGWindowOwnerName || '', title: w.kCGWindowName || '' }
+    if (Number(w.kCGWindowLayer) !== 0 || !b) continue
+    if (x >= Number(b.X) && x < Number(b.X) + Number(b.Width) && y >= Number(b.Y) && y < Number(b.Y) + Number(b.Height)) {
+      return { ok: true, hwnd: Number(w.kCGWindowOwnerPID), proc: w.kCGWindowOwnerName || '', title: w.kCGWindowName || '' }
     }
   }
   return { ok: true }
@@ -116,7 +125,7 @@ const commands = {
     return a ? { ok: true, hwnd: a.pid } : { ok: true }
   },
   focus(req) {
-    return { ok: true, focused: focus(req.hwnd) }
+    return { ok: true, focused: focus(Number(req.hwnd)) }
   },
   paste(req) {
     const a = findApp(req.processNames)
@@ -124,23 +133,23 @@ const commands = {
     return pasteInto(a.pid, a.name, req)
   },
   pasteInto(req) {
-    return pasteInto(req.hwnd, req.title, req)
+    return pasteInto(Number(req.hwnd), req.title, req)
   },
   pasteImage(req) {
-    if (!focus(req.hwnd)) return { ok: true, pasted: false }
+    if (!focus(Number(req.hwnd))) return { ok: true, pasted: false }
     delay(0.25)
     systemEvents().keystroke('v', { using: 'command down' })
     return { ok: true, pasted: true }
   },
   atCursor,
   ping() {
-    const list = $.NSWorkspace.sharedWorkspace.runningApplications
-    const sample = []
-    for (let i = 0; i < Math.min(list.count, 6); i++) {
-      const a = list.objectAtIndex(i)
-      sample.push(`${text(a.localizedName)}/${a.activationPolicy}`)
+    const windows = onScreenWindows().filter((w) => Number(w.kCGWindowLayer) === 0)
+    return {
+      ok: true,
+      regular: apps().map((a) => `${a.name}#${a.pid}`),
+      mouse: mousePoint(),
+      windows: windows.map((w) => ({ pid: Number(w.kCGWindowOwnerPID), owner: w.kCGWindowOwnerName, b: w.kCGWindowBounds }))
     }
-    return { ok: true, running: list.count, regular: apps().length, sample }
   }
 }
 
