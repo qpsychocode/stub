@@ -73,12 +73,13 @@ function ChatPicker({ project, targets, onBind }: { project: Project; targets: H
     }
   }, [targets])
   const encode = (c: ChatBinding | null | undefined): string => (c ? JSON.stringify([c.group, c.title]) : '')
-  const shown = targets.filter((t) => lists?.[t.id]?.found || project.chats?.[t.id])
+  const shown = targets.filter((t) => (lists?.[t.id]?.found && lists[t.id].supported) || project.chats?.[t.id])
   return (
     <div className="field">
       <span className="field-label">{tr('Куда отправлять тикеты')}</span>
       {!lists && <div className="path-line">{tr('Ищу чаты…')}</div>}
-      {lists && shown.length === 0 && <div className="path-line">{tr('Открой Claude или Codex, чтобы выбрать чат')}</div>}
+      {lists && targets.every((t) => lists[t.id]?.supported === false) && <div className="path-line">{tr('Выбор чата пока работает только на Windows')}</div>}
+      {lists && shown.length === 0 && targets.some((t) => lists[t.id]?.supported) && <div className="path-line">{tr('Открой Claude или Codex, чтобы выбрать чат')}</div>}
       {shown.map((t) => {
         const list = lists?.[t.id]
         const bound = project.chats?.[t.id]
@@ -101,7 +102,7 @@ function ChatPicker({ project, targets, onBind }: { project: Project; targets: H
                 onBind(t.id, { group, title })
               }}
             />
-            {list?.found && list.chats.length === 0 && <div className="path-line">{tr('Чаты не видны: открой боковую панель приложения')}</div>}
+            {list?.found && list.supported && list.chats.length === 0 && <div className="path-line">{tr('Чаты не видны: разверни окно приложения и открой его боковую панель')}</div>}
           </div>
         )
       })}

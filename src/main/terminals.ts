@@ -2,7 +2,8 @@
 import { execFile } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { homedir } from 'node:os'
+import { basename, delimiter, join } from 'node:path'
 import { app, dialog, type BrowserWindow } from 'electron'
 import * as pty from 'node-pty'
 import type { TerminalKind } from '@shared/contract'
@@ -15,9 +16,22 @@ interface Live {
 }
 
 const live = new Map<string, Live>()
+const IS_MAC = process.platform === 'darwin'
+const macShell = (): string => process.env.SHELL || '/bin/zsh'
+
+/** An app started from Finder gets a bare PATH, without Homebrew or npm's folders: take the user's real one from their login shell. */
+export function loadLoginPath(): Promise<void> {
+  if (!IS_MAC) return Promise.resolve()
+  return new Promise((resolve) => {
+    execFile(macShell(), ['-ilc', 'printf "%s" "$PATH"'], { timeout: 2500 }, (e, out) => {
+      if (!e && out.includes('/')) process.env.PATH = out.split('\n').pop() || process.env.PATH
+      resolve()
+    })
+  })
+}
 
 function onPath(names: string[]): string | null {
-  const dirs = (process.env.PATH ?? '').split(';').filter(Boolean)
+  const dirs = (process.env.PATH ?? '').split(delimiter).filter(Boolean)
   for (const dir of dirs) {
     for (const n of names) {
       const f = join(dir, n)
@@ -57,6 +71,22 @@ function newestBelow(root: string, name: string, depth: number): string | null {
 
 /** Where a CLI lives: on PATH, or the copy its desktop app keeps. */
 function findCli(kind: TerminalKind): string | null {
+  if (IS_MAC) {
+    const home = homedir()
+    const first = (...files: string[]): string | null => files.find((f) => existsSync(f)) ?? null
+    switch (kind) {
+      case 'claude': {
+        const bundled = join(home, 'Library', 'Application Support', 'Claude', 'claude-code')
+        return onPath(['claude']) ?? first(join(home, '.local', 'bin', 'claude'), join(home, '.claude', 'local', 'claude')) ?? (existsSync(bundled) ? newestBelow(bundled, 'claude', 4) : null)
+      }
+      case 'codex':
+        return onPath(['codex'])
+      case 'opencode':
+        return onPath(['opencode']) ?? first(join(home, '.opencode', 'bin', 'opencode'))
+      case 'shell':
+        return macShell()
+    }
+  }
   const local = process.env.LOCALAPPDATA ?? ''
   const roaming = process.env.APPDATA ?? ''
   switch (kind) {
@@ -89,9 +119,19 @@ export function createTerminal(kind: TerminalKind, cwd: string, cols: number, ro
   if (!cli) throw new Error(`Программа не найдена: ${kind}`)
   const env = { ...process.env } as Record<string, string>
   delete env.ELECTRON_RUN_AS_NODE
-  // -NoExit leaves a working prompt behind when the CLI quits. npm's shims are unsigned local scripts, hence RemoteSigned for this process only.
-  const args = kind === 'shell' ? ['-NoLogo'] : ['-NoLogo', '-NoExit', '-ExecutionPolicy', 'RemoteSigned', '-Command', `& '${cli.replace(/'/g, "''")}'`]
-  const proc = pty.spawn('powershell.exe', args, { name: 'xterm-256color', cols, rows, cwd, env, useConptyDll: false })
+  let shell: string
+  let args: string[]
+  if (IS_MAC) {
+    // A GUI app has no locale, and without one Cyrillic comes out broken. Returning to a shell leaves a working prompt when the CLI quits.
+    env.LANG ||= 'en_US.UTF-8'
+    shell = macShell()
+    args = kind === 'shell' ? ['-l'] : ['-lc', `'${cli.replace(/'/g, `'\\''`)}'; exec "${shell}" -l`]
+  } else {
+    // -NoExit leaves a working prompt behind when the CLI quits. npm's shims are unsigned local scripts, hence RemoteSigned for this process only.
+    shell = 'powershell.exe'
+    args = kind === 'shell' ? ['-NoLogo'] : ['-NoLogo', '-NoExit', '-ExecutionPolicy', 'RemoteSigned', '-Command', `& '${cli.replace(/'/g, "''")}'`]
+  }
+  const proc = pty.spawn(shell, args, { name: 'xterm-256color', cols, rows, cwd, env, useConptyDll: false })
   const id = randomUUID()
   const entry: Live = { proc, buffer: '', timer: null }
   live.set(id, entry)

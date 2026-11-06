@@ -16,6 +16,20 @@ asarUnpack:
 extraResources:
   - from: resources/winhelper.ps1
     to: winhelper.ps1
+  - from: resources/machelper.js
+    to: machelper.js
+mac:
+  icon: resources/icon-mac.png
+  category: public.app-category.productivity
+  # Ad-hoc: required to run at all on Apple Silicon. Not a Developer ID, so macOS warns on first launch.
+  identity: "-"
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  extendInfo:
+    NSMicrophoneUsageDescription: STUB records your voice to turn it into a ticket. The audio stays on this computer.
+    NSAppleEventsUsageDescription: STUB pastes tickets into the app you send them to.
+dmg:
+  artifactName: STUB-${version}-${arch}.${ext}
 win:
   icon: resources/icon.ico
   target:

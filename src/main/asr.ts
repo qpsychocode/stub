@@ -1,11 +1,19 @@
 // Main-side manager of the ASR utilityProcess.
-import { utilityProcess, type UtilityProcess } from 'electron'
+import { app, utilityProcess, type UtilityProcess } from 'electron'
 import { join } from 'node:path'
 import type { AsrStatus } from '@shared/contract'
 
 interface Pending {
   resolve: (v: { text?: string }) => void
   reject: (e: Error) => void
+}
+
+/** On macOS the speech library only finds its own dylibs through this variable. */
+function workerEnv(): NodeJS.ProcessEnv {
+  if (process.platform !== 'darwin') return process.env
+  const base = app.isPackaged ? join(process.resourcesPath, 'app.asar.unpacked', 'node_modules') : join(app.getAppPath(), 'node_modules')
+  const lib = join(base, `sherpa-onnx-darwin-${process.arch}`)
+  return { ...process.env, DYLD_LIBRARY_PATH: [lib, process.env.DYLD_LIBRARY_PATH].filter(Boolean).join(':') }
 }
 
 export class AsrManager {
@@ -38,7 +46,7 @@ export class AsrManager {
   }
 
   private spawn(): void {
-    const child = utilityProcess.fork(join(__dirname, 'asr-worker.js'), [], { serviceName: 'stub-asr', stdio: 'inherit' })
+    const child = utilityProcess.fork(join(__dirname, 'asr-worker.js'), [], { serviceName: 'stub-asr', stdio: 'inherit', env: workerEnv() })
     this.child = child
     child.on('message', (m: { type: string; [k: string]: any }) => {
       switch (m.type) {

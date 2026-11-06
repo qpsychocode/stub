@@ -1,16 +1,21 @@
-import { execFile, spawn } from 'node:child_process'
+import { execFile, spawn, type ChildProcess } from 'node:child_process'
 import { BrowserWindow, session, type Session } from 'electron'
 import type { HarnessLimits, LimitWindow } from '@shared/contract'
 
 const CODEX_TIMEOUT = 20000
 const CLAUDE_ORIGIN = 'https://claude.ai'
 const CLAUDE_PARTITION = 'persist:claude-usage'
-const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
+const CHROME_UA = `Mozilla/5.0 (${process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7' : 'Windows NT 10.0; Win64; x64'}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36`
 
 const clampPercent = (n: number): number => Math.max(0, Math.min(100, n))
 
-function killTree(pid: number | undefined): void {
-  if (pid) execFile('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true }, () => undefined)
+function stop(p: ChildProcess): void {
+  if (process.platform === 'win32') {
+    if (p.pid) execFile('taskkill', ['/pid', String(p.pid), '/T', '/F'], { windowsHide: true }, () => undefined)
+    return
+  }
+  p.stdin?.end() // the app-server exits when its input closes
+  p.kill()
 }
 
 interface CodexWindow {
@@ -35,7 +40,7 @@ function readCodex(): Promise<HarnessLimits> {
       if (settled) return
       settled = true
       clearTimeout(timer)
-      killTree(p.pid)
+      stop(p)
       resolve(r)
     }
     const timer = setTimeout(() => done({ status: 'error', windows: [], note: 'Codex не ответил вовремя' }), CODEX_TIMEOUT)

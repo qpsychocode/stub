@@ -201,6 +201,9 @@ monospace serials, big outlined lane numerals. Calm, warm, tactile, confident; o
   an empty database and then left untouched. A failed write shows НЕ СОХРАНЕНО in the titlebar and retries every 5 s. A database or legacy file
   that cannot be read shows an error and quits; it is never replaced with an empty board.
 - Respect `prefers-reduced-motion` (disable rotations/springs).
+- macOS: `resources/machelper.js` (JXA through osascript) replaces winhelper.ps1 behind `NativeHelper`; pasting needs the Accessibility permission. Choosing a chat is
+  Windows only for now. The app is ad-hoc signed, so macOS warns on first launch and it cannot replace itself: new versions are offered as a link to the website.
+  `.github/workflows/mac.yml` builds both architectures and `scripts/ci-smoke.mjs` starts the app on a Mac to check the native parts.
 - Terminals: a panel right of the board, per project, opening in the project's folder (chosen locally or cloned from a link). Buttons start Claude,
   Codex, OpenCode (from PATH, or the copy their desktop app keeps) or a plain PowerShell, through node-pty. A ticket dropped on the panel goes into the
   active terminal without running: as one bracketed paste where the program supports it, otherwise as a single line; pictures become files whose paths join the text. Terminals last as long as the app runs.

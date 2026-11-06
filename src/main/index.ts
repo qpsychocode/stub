@@ -7,7 +7,7 @@ import { Harness } from './harness'
 import { addImage, imageDataUrl } from './images'
 import { readLimits, signInClaude } from './limits'
 import { cancelDownload, modelsState, removeModel, startDownload } from './models'
-import { availableTerminals, cloneRepo, createTerminal, hasLiveTerminals, killAllTerminals, killTerminal, pasteToTerminal, pickFolder, resizeTerminal, writeTerminal } from './terminals'
+import { availableTerminals, cloneRepo, createTerminal, hasLiveTerminals, killAllTerminals, loadLoginPath, killTerminal, pasteToTerminal, pickFolder, resizeTerminal, writeTerminal } from './terminals'
 import { checkForUpdates, installUpdate, startUpdates, updateState } from './updates'
 import { closeStore, dbPath, deletedTickets, loadData, saveData } from './store'
 
@@ -78,7 +78,8 @@ function createWindow(): void {
     minWidth: 1040,
     minHeight: 680,
     show: false,
-    frame: false,
+    // macOS keeps its own window buttons, in the place people expect them.
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 15 } } : { frame: false }),
     backgroundColor: '#E9E6DF',
     title: 'STUB',
     icon: join(app.getAppPath(), 'resources', 'icon.png'),
@@ -191,6 +192,7 @@ async function bootstrap(): Promise<void> {
   session.defaultSession.setPermissionCheckHandler((_wc, permission, origin) => permission === 'media' && allowMedia(origin))
 
   registerIpc()
+  await loadLoginPath()
   let data: AppData
   try {
     data = await loadData()

@@ -51,9 +51,9 @@ export function Titlebar({ asr, displayState, saveError, update, theme, settings
       </div>
 
       <div className="tb-right">
-        {update.status === 'ready' && (
-          <button type="button" className="update-btn" onClick={() => api.updates.install()} title={tr('STUB перезапустится, доска сохранится')}>
-            {tr('Обновить до {0}', update.version)}
+        {(update.status === 'ready' || update.status === 'manual') && (
+          <button type="button" className="update-btn" onClick={() => api.updates.install()} title={update.status === 'ready' ? tr('STUB перезапустится, доска сохранится') : tr('Новая версия на сайте')}>
+            {update.status === 'ready' ? tr('Обновить до {0}', update.version) : tr('Скачать {0}', update.version)}
           </button>
         )}
         {saveError && (

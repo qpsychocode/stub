@@ -31,7 +31,25 @@ export interface CursorWindow {
 
 const READY_TIMEOUT = 30000 // Add-Type compile on a cold machine can be slow
 
-export class WinHelper {
+/** What sending needs from the operating system. Ids are window handles on Windows and process ids on macOS. */
+export interface NativeHelper {
+  readonly supportsChats: boolean
+  warmup(): void
+  dispose(): void
+  detect(targets: { id: string; processNames: string[]; titleIncludes?: string }[]): Promise<Record<string, boolean>>
+  paste(params: PasteParams): Promise<PasteReply>
+  windowAtCursor(): Promise<CursorWindow | null>
+  find(params: { processNames: string[]; titleIncludes?: string }): Promise<number | null>
+  listChats(id: number): Promise<{ chats: { group: string; title: string }[]; groups: string[] }>
+  openChat(params: { hwnd: number; group: string; title: string | null }): Promise<boolean>
+  pasteImage(id: number): Promise<boolean>
+  pasteInto(params: { hwnd: number; title: string; submit: boolean; needle: string }): Promise<PasteReply>
+  focus(id: number): Promise<boolean>
+}
+
+export class WinHelper implements NativeHelper {
+  readonly supportsChats = true
+
   private scriptPath: string
   private proc: ChildProcessWithoutNullStreams | null = null
   private ready: Promise<void> | null = null
