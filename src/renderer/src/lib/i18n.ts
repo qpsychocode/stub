@@ -225,7 +225,7 @@ const EN: Record<string, string> = {
   '{0} · новая сессия': '{0} · new session',
   'новая сессия': 'new session',
   'новая сессия · {0}': 'new session · {0}',
-  'Чаты не видны: открой боковую панель приложения': 'No chats visible: open the app\'s sidebar',
+  'Чаты не видны: разверни окно приложения и открой его боковую панель': 'No chats visible: restore the app\'s window and open its sidebar',
   'Тикеты этого проекта идут сюда': 'This project\'s tickets go here',
   'Правый клик: название и чат для тикетов': 'Right-click: name and the chat for tickets',
   'Не смог открыть чат проекта. {0}': 'Could not open the project\'s chat. {0}',

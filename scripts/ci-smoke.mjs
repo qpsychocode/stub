@@ -21,14 +21,19 @@ check('node-pty prebuild unpacked', existsSync(join(unpacked, `node-pty/prebuild
 
 // The helper script runs by itself; these commands need no permissions.
 const script = join(appDir, 'Contents/Resources/machelper.js')
-for (const req of [{ cmd: 'ping' }, { cmd: 'atCursor' }, { cmd: 'find', processNames: ['Finder'] }, { cmd: 'detect', targets: [{ id: 'finder', processNames: ['Finder'] }, { id: 'none', processNames: ['NoSuchApp'] }] }]) {
+const helper = (req) => JSON.parse(execFileSync('osascript', ['-l', 'JavaScript', script, JSON.stringify(req)], { encoding: 'utf8', timeout: 20000 }))
+const tryHelper = (name, req, judge) => {
   try {
-    const out = JSON.parse(execFileSync('osascript', ['-l', 'JavaScript', script, JSON.stringify(req)], { encoding: 'utf8', timeout: 20000 }))
-    check(`helper ${req.cmd}`, out.ok === true, out)
+    const out = helper(req)
+    check(name, out.ok === true && judge(out), out)
+    return out
   } catch (e) {
-    check(`helper ${req.cmd}`, false, String(e.stderr || e.message).slice(0, 300))
+    check(name, false, String(e.stderr || e.message).slice(0, 300))
+    return null
   }
 }
+console.log('Finder running:', execFileSync('sh', ['-c', 'pgrep -x Finder || echo no'], { encoding: 'utf8' }).trim())
+tryHelper('helper sees running apps', { cmd: 'ping' }, (o) => o.running > 0)
 
 const profile = mkdtempSync(join(tmpdir(), 'stub-smoke-'))
 const folder = mkdtempSync(join(tmpdir(), 'stub-project-'))
@@ -67,6 +72,11 @@ const js = (expression) =>
   })
 try {
   await wait(4000)
+  // With STUB's own window up, the helper has something real to find. This is what sockets rely on.
+  const found = tryHelper('helper finds a running app', { cmd: 'find', processNames: ['STUB'] }, (o) => o.hwnd === app.pid)
+  console.log('helper found', found?.hwnd, 'app pid', app.pid)
+  tryHelper('helper detect', { cmd: 'detect', targets: [{ id: 'me', processNames: ['stub'] }, { id: 'none', processNames: ['NoSuchApp'] }] }, (o) => o.found.me === true && o.found.none === false)
+  tryHelper('helper atCursor answers', { cmd: 'atCursor' }, () => true)
   check('board shows', (await js(`document.querySelectorAll('.lane').length`)) === 3)
   check('platform class', (await js(`document.documentElement.dataset.platform`)) === 'mac')
   check('no window buttons of ours', (await js(`getComputedStyle(document.querySelector('.win-btn')).display`)) === 'none')

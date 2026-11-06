@@ -102,7 +102,7 @@ function ChatPicker({ project, targets, onBind }: { project: Project; targets: H
                 onBind(t.id, { group, title })
               }}
             />
-            {list?.found && list.supported && list.chats.length === 0 && <div className="path-line">{tr('Чаты не видны: открой боковую панель приложения')}</div>}
+            {list?.found && list.supported && list.chats.length === 0 && <div className="path-line">{tr('Чаты не видны: разверни окно приложения и открой его боковую панель')}</div>}
           </div>
         )
       })}

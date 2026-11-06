@@ -134,7 +134,13 @@ const commands = {
   },
   atCursor,
   ping() {
-    return { ok: true, apps: apps().length }
+    const list = $.NSWorkspace.sharedWorkspace.runningApplications
+    const sample = []
+    for (let i = 0; i < Math.min(list.count, 6); i++) {
+      const a = list.objectAtIndex(i)
+      sample.push(`${text(a.localizedName)}/${a.activationPolicy}`)
+    }
+    return { ok: true, running: list.count, regular: apps().length, sample }
   }
 }
 
