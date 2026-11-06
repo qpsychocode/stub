@@ -175,3 +175,15 @@
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
+
+/* macOS draws its own window buttons at the top left */
+[data-platform='mac'] .win-btn,
+[data-platform='mac'] .tb-gap {
+  display: none;
+}
+[data-platform='mac'] .titlebar {
+  padding-left: 84px;
+}
+[data-platform='mac'] .tb-right {
+  padding-right: var(--s3);
+}

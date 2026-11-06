@@ -81,10 +81,11 @@ export async function openTerminal(kind: TerminalKind, projectId: string, cwd: s
   const id = await api.terminals.create(kind, cwd, 100, 30)
   term.onData((d) => api.terminals.write(id, d))
   term.onResize(({ cols, rows }) => api.terminals.resize(id, cols, rows))
-  // Ctrl+C copies when something is selected, Ctrl+V pastes; everything else goes to the program.
+  // Copy when something is selected, and paste; everything else goes to the program. On a Mac these are Cmd, and Ctrl+C stays an interrupt.
+  const mac = navigator.platform.startsWith('Mac')
   term.attachCustomKeyEventHandler((e) => {
-    if (e.type !== 'keydown' || !e.ctrlKey || e.altKey || e.shiftKey) return true
-    if (e.code === 'KeyC' && term.hasSelection()) {
+    if (e.type !== 'keydown' || !(mac ? e.metaKey : e.ctrlKey) || e.altKey || e.shiftKey) return true
+    if (e.code === 'KeyC' && (mac || term.hasSelection())) {
       api.clipboard.write(term.getSelection())
       term.clearSelection()
       return false

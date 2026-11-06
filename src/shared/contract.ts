@@ -20,6 +20,7 @@ export interface ChatBinding {
 
 export interface ChatList {
   found: boolean // the app has a window
+  supported: boolean // false: choosing a chat is not available on this system
   chats: { group: string; title: string }[]
   groups: string[]
 }
@@ -59,7 +60,7 @@ export interface HarnessTarget {
   id: string
   name: string // "Claude Code"
   glyph: string // 2-3 letters shown in the socket when the target has no brand logo, e.g. "CC"
-  processNames: string[] // Windows process names without .exe, case-insensitive, e.g. ["claude"]
+  processNames: string[] // process names without .exe (Windows) or app names (macOS), case-insensitive, e.g. ["claude"]
   titleIncludes?: string // optional case-insensitive substring of the window title
   submit: boolean // press Enter after a verified paste
   builtin: boolean
@@ -78,7 +79,7 @@ export interface HarnessLimits {
 }
 
 export interface UpdateState {
-  status: 'idle' | 'checking' | 'none' | 'downloading' | 'ready' | 'error'
+  status: 'idle' | 'checking' | 'none' | 'downloading' | 'ready' | 'manual' | 'error' // manual: a newer version waits on the website
   current: string // running version
   version?: string // the new one
   percent?: number

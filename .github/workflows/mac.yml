@@ -1,0 +1,42 @@
+name: Mac build
+
+on:
+  push:
+    branches: [mac]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Icon
+        run: sips -z 1024 1024 resources/icon.png --out resources/icon-mac.png
+      - run: npx electron-vite build
+      - name: Package
+        run: npx electron-builder --mac dmg --${{ matrix.arch }} --publish never
+      - name: Start it for real
+        run: node scripts/ci-smoke.mjs ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: STUB-mac-${{ matrix.arch }}
+          path: dist/*.dmg
+          retention-days: 14

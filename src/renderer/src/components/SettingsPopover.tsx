@@ -258,12 +258,13 @@ export function SettingsPopover({ settings, asr, onChange, onAsr, onRestoreTicke
             {update.status === 'none' && ` · ${tr('последняя')}`}
             {update.status === 'downloading' && ` · ${tr('скачиваю {0} · {1}%', update.version, update.percent ?? 0)}`}
             {update.status === 'ready' && ` · ${tr('готова {0}', update.version)}`}
+            {update.status === 'manual' && ` · ${tr('есть {0}', update.version)}`}
             {update.status === 'error' && ` · ${tr('не удалось проверить')}`}
           </span>
           <span className="pop-spacer" />
-          {update.status === 'ready' ? (
+          {update.status === 'ready' || update.status === 'manual' ? (
             <button type="button" className="btn is-primary" onClick={() => api.updates.install()}>
-              {tr('Перезапустить')}
+              {update.status === 'ready' ? tr('Перезапустить') : tr('На сайт')}
             </button>
           ) : (
             <button type="button" className="btn is-ghost" disabled={update.status === 'checking' || update.status === 'downloading'} onClick={() => api.updates.check()}>

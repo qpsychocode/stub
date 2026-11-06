@@ -229,7 +229,12 @@ const EN: Record<string, string> = {
   'Тикеты этого проекта идут сюда': 'This project\'s tickets go here',
   'Правый клик: название и чат для тикетов': 'Right-click: name and the chat for tickets',
   'Не смог открыть чат проекта. {0}': 'Could not open the project\'s chat. {0}',
+  'Выбор чата пока работает только на Windows': 'Choosing a chat works on Windows only for now',
   // updates
+  'Новая версия на сайте': 'A new version is on the website',
+  'Скачать {0}': 'Download {0}',
+  'есть {0}': '{0} available',
+  'На сайт': 'To the website',
   'STUB перезапустится, доска сохранится': 'STUB will restart, the board is saved',
   'Обновить до {0}': 'Update to {0}',
   'Версия STUB': 'STUB version',

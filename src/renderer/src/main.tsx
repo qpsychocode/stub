@@ -21,6 +21,8 @@ import './styles/overlays.css'
 import { App } from './App'
 import { ToastProvider } from './components/Toasts'
 
+document.documentElement.dataset.platform = navigator.platform.startsWith('Mac') ? 'mac' : 'other'
+
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">

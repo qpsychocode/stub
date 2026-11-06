@@ -129,8 +129,8 @@ export async function modelsState(): Promise<ModelsState> {
 }
 
 function unpack(archive: string, into: string): Promise<void> {
-  // bsdtar ships with Windows and refuses paths that climb out of the target folder.
-  const tar = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe')
+  // bsdtar ships with Windows and macOS and refuses paths that climb out of the target folder.
+  const tar = process.platform === 'win32' ? join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe') : '/usr/bin/tar'
   return new Promise((res, rej) => execFile(tar, ['-xjf', archive, '-C', into], { windowsHide: true, maxBuffer: 1 << 24 }, (e) => (e ? rej(e) : res())))
 }
 

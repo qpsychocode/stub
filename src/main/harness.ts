@@ -2,20 +2,21 @@ import { app, clipboard, ClipboardItem, type BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import type { ChatList, DropRequest, DropResult, HarnessTarget, SendRequest, SendResult } from '@shared/contract'
 import { getImage } from './store'
-import { WinHelper, type PasteReply } from './winhelper.ts'
+import { MacHelper } from './machelper.ts'
+import { WinHelper, type NativeHelper, type PasteReply } from './winhelper.ts'
 
 // Chat apps upload a pasted picture before they can send; Enter too early would leave it behind.
 const IMAGE_SETTLE_MS = 1500
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
 // Desktop, taskbar and File Explorer: nowhere to paste a prompt.
-const SHELL_PROCESSES = new Set(['explorer', 'searchhost', 'shellexperiencehost', 'startmenuexperiencehost'])
+const SHELL_PROCESSES = new Set(['explorer', 'searchhost', 'shellexperiencehost', 'startmenuexperiencehost', 'finder', 'dock', 'windowserver', 'systemuiserver', 'control center', 'notification center'])
+const IS_MAC = process.platform === 'darwin'
 
-const scriptPath = (): string =>
-  app.isPackaged ? join(process.resourcesPath, 'winhelper.ps1') : join(app.getAppPath(), 'resources', 'winhelper.ps1')
+const scriptPath = (name: string): string => (app.isPackaged ? join(process.resourcesPath, name) : join(app.getAppPath(), 'resources', name))
 
 export class Harness {
-  private helper = new WinHelper(scriptPath())
+  private helper: NativeHelper = IS_MAC ? new MacHelper(scriptPath('machelper.js')) : new WinHelper(scriptPath('winhelper.ps1'))
   private getWindow: () => BrowserWindow | null
 
   constructor(getWindow: () => BrowserWindow | null) {
@@ -89,10 +90,11 @@ export class Harness {
   async listChats(target: HarnessTarget): Promise<ChatList> {
     try {
       const hwnd = await this.helper.find({ processNames: target.processNames, titleIncludes: target.titleIncludes || undefined })
-      if (hwnd === null) return { found: false, chats: [], groups: [] }
-      return { found: true, ...(await this.helper.listChats(hwnd)) }
+      const supported = this.helper.supportsChats
+      if (hwnd === null) return { found: false, supported, chats: [], groups: [] }
+      return { found: true, supported, ...(await this.helper.listChats(hwnd)) }
     } catch {
-      return { found: false, chats: [], groups: [] }
+      return { found: false, supported: this.helper.supportsChats, chats: [], groups: [] }
     }
   }
 
@@ -132,6 +134,7 @@ export class Harness {
   private selfHwnd(): number | null {
     const win = this.getWindow()
     if (!win || win.isDestroyed()) return null
+    if (IS_MAC) return process.pid
     const buf = win.getNativeWindowHandle()
     return Number(buf.byteLength >= 8 ? buf.readBigUInt64LE(0) : BigInt(buf.readUInt32LE(0)))
   }
