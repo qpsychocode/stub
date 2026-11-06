@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STUB: личный тикет-борд, где ни один тикет не потеряется</title>
-<meta name="description" content="Твой личный тикет-борд. Надиктуй задачу голосом и отправь её в Claude, Codex или OpenCode. Открытое приложение для Windows, распознавание работает на компьютере.">
+<meta name="description" content="Твой личный тикет-борд. Надиктуй задачу голосом и отправь её в Claude, Codex или OpenCode. Открытое приложение для Windows и macOS (бета), распознавание работает на компьютере.">
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -126,6 +126,8 @@
     </div>
     <p class="fine" lang="ru">STUB-Setup.exe · примерно 125 МБ · бесплатно, лицензия MIT<br>Установщик без цифровой подписи: Windows может предупредить. Тогда «Подробнее» → «Выполнить в любом случае».</p>
     <p class="fine" lang="en">STUB-Setup.exe · about 125 MB · free, MIT license<br>The installer is not code-signed, so Windows may warn you. Choose “More info” → “Run anyway”.</p>
+    <p class="fine" lang="ru"><b>macOS, бета:</b> <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-arm64.dmg">Apple M</a> · <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-x64.dmg">Intel</a>. Проверена автоматически, на обычном Mac пока не обкатана. Выбор чата проекта только на Windows, новые версии ставятся вручную.<br>Без подписи Apple: «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть». Если пишет, что приложение повреждено: <code>xattr -cr /Applications/STUB.app</code></p>
+    <p class="fine" lang="en"><b>macOS, beta:</b> <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-arm64.dmg">Apple silicon</a> · <a style="color:inherit;text-decoration:underline" href="https://github.com/qpsychocode/stub-releases/releases/download/v0.1.5/STUB-0.1.5-x64.dmg">Intel</a>. Tested automatically, not yet on an everyday Mac. Choosing a project's chat is Windows-only, and new versions are installed by hand.<br>Not signed by Apple: System Settings → Privacy &amp; Security → “Open Anyway”. If it says the app is damaged: <code>xattr -cr /Applications/STUB.app</code></p>
   </section>
 
   <figure class="demo" id="demo">
@@ -156,6 +158,10 @@
   <h2 lang="ru">Что внутри</h2>
   <h2 lang="en">What's inside</h2>
   <div class="features">
+    <div class="feature"><h3 lang="ru">Сам видит, когда готово</h3><h3 lang="en">Knows when it's done</h3>
+      <p lang="ru">Сессия закончила: тикет уходит в «Готово» со звуком. Нейронка ждёт ответа: на тикете красный сигнал.</p><p lang="en">Session finished: the ticket moves to Done with a chime. The AI needs an answer: the ticket shows a red signal.</p></div>
+    <div class="feature"><h3 lang="ru">Терминалы рядом с доской</h3><h3 lang="en">Terminals beside the board</h3>
+      <p lang="ru">Claude, Codex или OpenCode в папке проекта прямо в окне STUB. Тикет перетаскивается в терминал.</p><p lang="en">Claude, Codex or OpenCode in the project's folder, right inside STUB. Drag a ticket into the terminal.</p></div>
     <div class="feature"><h3 lang="ru">Модели на выбор</h3><h3 lang="en">Choice of models</h3>
       <p lang="ru">Скачивай и обновляй модели распознавания прямо в приложении: от 23 МБ до 453 МБ.</p><p lang="en">Download and update speech models in the app, from 23 MB to 453 MB.</p></div>
     <div class="feature"><h3 lang="ru">Голос остаётся у тебя</h3><h3 lang="en">Your voice stays with you</h3>
@@ -173,10 +179,10 @@
   <section class="get">
     <div>
       <h2 lang="ru">Попробуй</h2><h2 lang="en">Try it</h2>
-      <p lang="ru">Нужна Windows. STUB обновляется сам, а модель распознавания скачивается в настройках при первом запуске.</p>
-      <p lang="en">Requires Windows. STUB updates itself, and you download a speech model in Settings on first launch.</p>
+      <p lang="ru">Нужна Windows или macOS (бета, ссылки вверху страницы). На Windows STUB обновляется сам, а модель распознавания скачивается в настройках при первом запуске.</p>
+      <p lang="en">Requires Windows or macOS (beta, links at the top of the page). On Windows STUB updates itself, and you download a speech model in Settings on first launch.</p>
     </div>
-    <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe"><span lang="ru">Скачать STUB</span><span lang="en">Download STUB</span></a>
+    <a class="btn primary" href="https://github.com/qpsychocode/stub-releases/releases/latest/download/STUB-Setup.exe"><span lang="ru">Скачать для Windows</span><span lang="en">Download for Windows</span></a>
   </section>
 
   <footer>
