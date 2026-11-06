@@ -12,9 +12,22 @@ export interface SendRecord {
   windowTitle?: string // window the ticket landed in, when dragged out of STUB
 }
 
+/** Which chat of an app a project's tickets go to. title null: a new session in that section. */
+export interface ChatBinding {
+  group: string
+  title: string | null
+}
+
+export interface ChatList {
+  found: boolean // the app has a window
+  chats: { group: string; title: string }[]
+  groups: string[]
+}
+
 export interface Project {
   id: string
   name: string
+  chats?: Record<string, ChatBinding> // by harness target id
 }
 
 export interface TicketImage {
@@ -141,6 +154,7 @@ export type SendOutcome =
   | 'unverified' // pasted, but the focused control could not be read — ask the user
   | 'not-found' // no running window for this target (text left in clipboard)
   | 'focus-failed' // window exists but could not be brought to front (text left in clipboard)
+  | 'chat-not-found' // the project's chat could not be opened; nothing pasted (text left in clipboard)
   | 'error'
 
 export interface SendResult {
@@ -153,6 +167,7 @@ export interface SendResult {
 export interface SendRequest {
   ticketId: string
   target: HarnessTarget
+  chat?: ChatBinding // open this chat first; without it the text goes to whichever chat is open
   text: string
   images: string[] // pasted before the text, in order
   returnFocus: boolean
@@ -233,6 +248,8 @@ export interface StubApi {
   }
   harness: {
     send(req: SendRequest): Promise<SendResult>
+    /** The chats an app's window shows right now. */
+    listChats(target: HarnessTarget): Promise<ChatList>
     sendToCursor(req: DropRequest): Promise<DropResult>
     /** Which targets currently have a window. Keyed by target id. */
     detect(targets: HarnessTarget[]): Promise<Record<string, boolean>>
@@ -295,6 +312,7 @@ export const IPC = {
   asrStatusEvt: 'asr:status-evt', // main -> renderer
   harnessSend: 'harness:send',
   harnessDrop: 'harness:drop',
+  harnessChats: 'harness:chats',
   harnessDetect: 'harness:detect',
   updatesState: 'updates:state',
   updatesCheck: 'updates:check', // ipcRenderer.send

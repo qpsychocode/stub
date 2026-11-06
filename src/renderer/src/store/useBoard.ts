@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type Dispatch } from 'react'
-import { DEFAULT_PROJECT, DEFAULT_SETTINGS, type AppData, type AppSettings, type Project, type SendRecord, type Ticket, type TicketImage, type TicketStatus } from '@shared/contract'
+import { DEFAULT_PROJECT, DEFAULT_SETTINGS, type AppData, type AppSettings, type ChatBinding, type Project, type SendRecord, type Ticket, type TicketImage, type TicketStatus } from '@shared/contract'
 import { api } from '../api'
 import { tr } from '../lib/i18n'
 
@@ -40,6 +40,7 @@ export type BoardAction =
   | { type: 'project-rename'; id: string; name: string }
   | { type: 'project-delete'; id: string }
   | { type: 'project-activate'; id: string }
+  | { type: 'project-chat'; id: string; targetId: string; chat: ChatBinding | null }
   | { type: 'delete'; id: string }
   | { type: 'restore'; ticket: Ticket }
   | { type: 'layout'; layout: Layout; movedId?: string }
@@ -86,6 +87,17 @@ function reducer(state: BoardState, action: BoardAction): BoardState {
       const projects = state.projects.filter((p) => p.id !== action.id)
       return { ...state, projects, activeProjectId: state.activeProjectId === action.id ? projects[0].id : state.activeProjectId }
     }
+    case 'project-chat':
+      return {
+        ...state,
+        projects: state.projects.map((p) => {
+          if (p.id !== action.id) return p
+          const chats = { ...p.chats }
+          if (action.chat) chats[action.targetId] = action.chat
+          else delete chats[action.targetId]
+          return { ...p, chats }
+        })
+      }
     case 'project-activate':
       return { ...state, activeProjectId: action.id }
     case 'create': {

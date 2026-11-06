@@ -170,6 +170,17 @@ export class WinHelper {
     return r.hwnd ? Number(r.hwnd) : null
   }
 
+  async listChats(hwnd: number): Promise<{ chats: { group: string; title: string }[]; groups: string[] }> {
+    const r = await this.request('listChats', { hwnd }, 10000)
+    return { chats: (r.chats ?? []) as { group: string; title: string }[], groups: (r.groups ?? []) as string[] }
+  }
+
+  /** Switches the app to a chat and confirms it from the window's header. False means it did not happen. */
+  async openChat(params: { hwnd: number; group: string; title: string | null }): Promise<boolean> {
+    const r = await this.request('openChat', params, 15000)
+    return Boolean(r.opened)
+  }
+
   /** Activates the window's input and presses Ctrl+V; the caller has put the picture on the clipboard. */
   async pasteImage(hwnd: number): Promise<boolean> {
     const r = await this.request('pasteImage', { hwnd }, 12000)

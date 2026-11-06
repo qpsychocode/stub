@@ -138,6 +138,7 @@ function registerIpc(): void {
   ipcMain.handle(IPC.asrReload, (_e, modelDir: string) => asr.reload(modelDir ?? ''))
 
   ipcMain.handle(IPC.harnessSend, (_e, req: SendRequest) => harness.send(req))
+  ipcMain.handle(IPC.harnessChats, (_e, target: HarnessTarget) => harness.listChats(target))
   ipcMain.handle(IPC.harnessDrop, (_e, req: DropRequest) => harness.sendToCursor(req))
   ipcMain.handle(IPC.harnessDetect, (_e, targets: HarnessTarget[]) => harness.detect(targets))
 

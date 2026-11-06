@@ -340,3 +340,16 @@
 .socket[data-over='true'] .limit-reset {
   opacity: 0.75;
 }
+
+.socket-chat {
+  max-width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 9px/1.2 var(--mono);
+  color: var(--accent);
+}
+.socket[data-over='true'] .socket-chat {
+  color: inherit;
+}

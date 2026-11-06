@@ -46,12 +46,15 @@ interface Props {
   images: TicketImage[]
   onFiles: (files: File[]) => void
   onRemove: (id: string) => void
+  /** Only the thumbnails: for dictation, where a picture arrives by Ctrl+V and an empty row is just clutter. */
+  thumbsOnly?: boolean
 }
 
 /** Thumbnails of a ticket's pictures with an add button. */
-export function ImageStrip({ images, onFiles, onRemove }: Props): JSX.Element {
+export function ImageStrip({ images, onFiles, onRemove, thumbsOnly }: Props): JSX.Element | null {
   const input = useRef<HTMLInputElement>(null)
   const [viewing, setViewing] = useState<string | null>(null)
+  if (thumbsOnly && images.length === 0) return null
   return (
     <div className="image-strip">
       {images.map((img) => (
@@ -64,21 +67,24 @@ export function ImageStrip({ images, onFiles, onRemove }: Props): JSX.Element {
           </button>
         </div>
       ))}
-      <button type="button" className="image-add" onClick={() => input.current?.click()} title={tr('Добавить картинку. Можно вставить через Ctrl+V или перетащить файл')}>
-        <ImagePlus size={15} strokeWidth={1.75} />
-        {images.length === 0 && <span>{tr('картинка · Ctrl+V')}</span>}
-      </button>
-      <input
-        ref={input}
-        type="file"
-        accept="image/*"
-        multiple
-        hidden
-        onChange={(e) => {
-          onFiles([...(e.target.files ?? [])])
-          e.target.value = ''
-        }}
-      />
+      {!thumbsOnly && (
+        <>
+          <button type="button" className="image-add" onClick={() => input.current?.click()} title={tr('Добавить картинку. Можно вставить через Ctrl+V или перетащить файл')}>
+            <ImagePlus size={15} strokeWidth={1.75} />
+          </button>
+          <input
+            ref={input}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={(e) => {
+              onFiles([...(e.target.files ?? [])])
+              e.target.value = ''
+            }}
+          />
+        </>
+      )}
       {viewing && <Viewer url={viewing} onClose={() => setViewing(null)} />}
     </div>
   )

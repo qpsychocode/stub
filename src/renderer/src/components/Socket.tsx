@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core'
 import { motion } from 'motion/react'
 import { Check, CornerDownLeft, Loader2 } from 'lucide-react'
-import type { HarnessLimits, HarnessTarget } from '@shared/contract'
+import type { ChatBinding, HarnessLimits, HarnessTarget } from '@shared/contract'
 import { HarnessLogo } from './HarnessLogo'
 import { LimitBars } from './LimitBars'
 import { tr } from '../lib/i18n'
@@ -10,6 +10,7 @@ interface Props {
   target: HarnessTarget
   running: boolean
   limits?: HarnessLimits
+  chat?: ChatBinding
   onSignIn: () => void
   wide: boolean
   state: 'idle' | 'sending' | 'ok'
@@ -20,7 +21,7 @@ interface Props {
 }
 
 /** A droppable harness socket: logo, name, running dot, Enter-after-paste toggle. */
-export function Socket({ target, running, limits, onSignIn, wide, state, disabled, elRef, onToggleSubmit, onEdit }: Props): JSX.Element {
+export function Socket({ target, running, limits, chat, onSignIn, wide, state, disabled, elRef, onToggleSubmit, onEdit }: Props): JSX.Element {
   const { setNodeRef, isOver } = useDroppable({ id: `socket:${target.id}`, data: { type: 'socket' }, disabled })
   return (
     <div
@@ -61,6 +62,11 @@ export function Socket({ target, running, limits, onSignIn, wide, state, disable
       <motion.span layout="position" className="socket-text">
         <span className="socket-name">{target.name}</span>
         <span className="socket-hint">{state === 'sending' ? tr('вставляю…') : tr('отпусти — отправлю')}</span>
+        {chat && (
+          <span className="socket-chat" title={tr('Тикеты этого проекта идут сюда')}>
+            {chat.title ?? tr('новая сессия · {0}', chat.group)}
+          </span>
+        )}
         {limits && <LimitBars limits={limits} onSignIn={onSignIn} />}
       </motion.span>
       <span className="socket-status" aria-hidden="true">

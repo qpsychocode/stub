@@ -201,6 +201,10 @@ monospace serials, big outlined lane numerals. Calm, warm, tactile, confident; o
   an empty database and then left untouched. A failed write shows НЕ СОХРАНЕНО in the titlebar and retries every 5 s. A database or legacy file
   that cannot be read shows an error and quits; it is never replaced with an empty board.
 - Respect `prefers-reduced-motion` (disable rotations/springs).
+- Project chats: a project can name a chat per app (right-click its tab). Sending to that socket first opens the chat by pressing its button in the app's
+  sidebar through UI Automation (`Get-ChatUi` in winhelper.ps1, which reads how the buttons relate rather than their wording) and confirms it from the
+  window header. If that fails nothing is pasted and the text stays on the clipboard. Bindings go by section and title, so renaming a chat breaks one.
+  Dragging a ticket out of STUB still goes to the window it is dropped on.
 - Self-update: electron-updater against the public `qpsychocode/stub-releases` GitHub releases (installers only, no source). Checks at start and every
   6 hours, downloads in the background, then offers a restart button in the titlebar; otherwise it installs on a normal quit.
   Publish with `npm run release`: bumps the version, builds and uploads. Not code-signed; integrity comes from the sha512 in `latest.yml`.

@@ -26,6 +26,7 @@ const api: StubApi = {
   },
   harness: {
     send: (req) => ipcRenderer.invoke(IPC.harnessSend, req),
+    listChats: (target) => ipcRenderer.invoke(IPC.harnessChats, target),
     sendToCursor: (req) => ipcRenderer.invoke(IPC.harnessDrop, req),
     detect: (targets) => ipcRenderer.invoke(IPC.harnessDetect, targets)
   },

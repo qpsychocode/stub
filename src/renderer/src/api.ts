@@ -112,6 +112,7 @@ function createMockApi(): StubApi {
         if (req.target.id === 'codex') return { outcome: 'unverified', submitted: false, windowTitle: 'Codex — рабочая область' }
         return { outcome: 'verified', submitted: req.target.submit, windowTitle: 'claude' }
       },
+      listChats: async () => ({ found: true, groups: ['stub'], chats: [{ group: 'stub', title: 'Демо-чат' }] }),
       sendToCursor: async (): Promise<DropResult> => {
         await new Promise((r) => setTimeout(r, 600))
         return { outcome: 'verified', submitted: false, targetId: 'claude', appName: 'claude', windowTitle: 'Claude' }

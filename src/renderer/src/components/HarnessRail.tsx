@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Plus } from 'lucide-react'
-import type { HarnessLimits, HarnessTarget } from '@shared/contract'
+import type { ChatBinding, HarnessLimits, HarnessTarget } from '@shared/contract'
 import { Popover } from './Popover'
 import { Socket } from './Socket'
 import { TargetEditor } from './TargetEditor'
@@ -16,6 +16,7 @@ interface Props {
   targets: HarnessTarget[]
   running: Record<string, boolean>
   limits: Record<string, HarnessLimits>
+  chats?: Record<string, ChatBinding> // the active project's chats
   onSignInClaude: () => void
   dragging: boolean
   sendingTargetId: string | null
@@ -33,7 +34,7 @@ const RAIL_W = 132
 
 const BLANK: HarnessTarget ={ id: '', name: '', glyph: '', processNames: [], submit: false, builtin: false }
 
-export function HarnessRail({ targets, running, limits, onSignInClaude, dragging, sendingTargetId, flashTargetId, pending, onConfirm, onChangeTargets }: Props): JSX.Element {
+export function HarnessRail({ targets, running, limits, chats, onSignInClaude, dragging, sendingTargetId, flashTargetId, pending, onConfirm, onChangeTargets }: Props): JSX.Element {
   const els = useRef<Record<string, HTMLElement | null>>({})
   const addRef = useRef<HTMLButtonElement>(null)
   const [editing, setEditing] = useState<Editing>(null)
@@ -54,6 +55,7 @@ export function HarnessRail({ targets, running, limits, onSignInClaude, dragging
               target={t}
               running={Boolean(running[t.id])}
               limits={limits[t.id]}
+              chat={chats?.[t.id]}
               onSignIn={onSignInClaude}
               wide={dragging}
               state={sendingTargetId === t.id ? 'sending' : flashTargetId === t.id ? 'ok' : 'idle'}

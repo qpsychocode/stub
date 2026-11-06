@@ -1,5 +1,5 @@
 # STUB Windows helper: persistent JSON-lines server (stdin -> stdout).
-# Request:  {"id":1,"cmd":"detect|find|paste|pasteInto|pasteImage|atCursor|focus|ping", ...}
+# Request:  {"id":1,"cmd":"detect|find|paste|pasteInto|pasteImage|listChats|openChat|atCursor|focus|ping", ...}
 # Response: {"id":1,"ok":true, ...}
 # Keep this file ASCII-only (Windows PowerShell 5.1 reads -File scripts as ANSI without BOM).
 
@@ -351,6 +351,106 @@ function Cmd-PasteImage($req) {
     return @{ ok = $true; pasted = $true }
 }
 
+# Reads a chat app's session list from its buttons. Language independent: it relies on how the buttons relate, not on their wording.
+#   section header: two buttons on, "new session in <section>" ends with the section's name
+#   session row: within two buttons, "<more options>: <title>", and the row's name starts with that title
+#   open session: in the header strip, right of the list, "<title>: <rename>"
+function Get-ChatUi([long]$hwnd) {
+    $root = [Windows.Automation.AutomationElement]::FromHandle([IntPtr]::new($hwnd))
+    $cond = New-Object Windows.Automation.PropertyCondition([Windows.Automation.AutomationElement]::ControlTypeProperty, [Windows.Automation.ControlType]::Button)
+    $box = $root.Current.BoundingRectangle
+    $els = @(); $names = @(); $xs = @(); $ys = @(); $rs = @()
+    foreach ($e in $root.FindAll([Windows.Automation.TreeScope]::Descendants, $cond)) {
+        try {
+            $c = $e.Current; $r = $c.BoundingRectangle
+            $x = [int]$r.X; $y = [int]($r.Y - $box.Y); $right = [int]$r.Right; $n = [string]$c.Name
+            $els += $e; $names += $n; $xs += $x; $ys += $y; $rs += $right
+        } catch { }
+    }
+    $group = ''; $groupX = $null; $chats = @(); $groups = @(); $newEls = @{}; $listRight = 0
+    for ($i = 0; $i -lt $names.Count; $i++) {
+        $n = $names[$i]
+        if (-not $n) { continue }
+        if ($null -ne $groupX -and [Math]::Abs($xs[$i] - $groupX) -gt 20) { continue }
+        $isRow = $false
+        foreach ($off in 1, 2) {
+            if ($group -and $i + $off -lt $names.Count -and $names[$i + $off] -match '^[^:]+: (.+)$' -and $n.StartsWith($Matches[1])) {
+                $chats += [pscustomobject]@{ group = $group; title = $Matches[1]; el = $els[$i] }
+                if ($rs[$i] -gt $listRight) { $listRight = $rs[$i] }
+                $isRow = $true
+                break
+            }
+        }
+        if ($isRow) { continue }
+        if ($i + 2 -lt $names.Count -and $names[$i + 2].EndsWith($n) -and $names[$i + 2].Length -gt $n.Length -and -not $names[$i + 1].Contains($n)) {
+            $group = $n
+            if ($null -eq $groupX) { $groupX = $xs[$i] }
+            if ($groups -notcontains $n) { $groups += $n; $newEls[$n] = $els[$i + 2] }
+        }
+    }
+    $current = $null
+    if ($listRight -gt 0) {
+        for ($i = 0; $i -lt $names.Count; $i++) {
+            if ($ys[$i] -ge 0 -and $ys[$i] -lt 100 -and $xs[$i] -ge $listRight -and $names[$i] -match '^(.+): [^:]+$') { $current = $Matches[1]; break }
+        }
+    }
+    # panels other than the session list can look like a section; a real section has sessions
+    $groups = @($groups | Where-Object { $g = $_; @($chats | Where-Object { $_.group -eq $g }).Count -gt 0 })
+    return @{ chats = $chats; groups = $groups; newEls = $newEls; current = $current }
+}
+
+# Chromium only builds its accessibility tree once something asks, so the first read of a fresh window can be empty.
+function Get-ChatUiPatient([long]$hwnd) {
+    $ui = Get-ChatUi $hwnd
+    for ($i = 0; $i -lt 6 -and @($ui.chats).Count -eq 0; $i++) {
+        Start-Sleep -Milliseconds 500
+        $ui = Get-ChatUi $hwnd
+    }
+    return $ui
+}
+
+function Invoke-Button($el) {
+    $pat = $null
+    if (-not $el.TryGetCurrentPattern([Windows.Automation.InvokePattern]::Pattern, [ref]$pat)) { return $false }
+    $pat.Invoke()
+    return $true
+}
+
+function Cmd-ListChats($req) {
+    $ui = Get-ChatUiPatient ([long]$req.hwnd)
+    $list = @($ui.chats | ForEach-Object { @{ group = $_.group; title = $_.title } })
+    return @{ ok = $true; chats = $list; groups = @($ui.groups) }
+}
+
+function Cmd-OpenChat($req) {
+    $hwnd = [long]$req.hwnd
+    if (-not [StubWin]::Focus($hwnd)) { return @{ ok = $true; opened = $false } }
+    Start-Sleep -Milliseconds 200
+    $ui = Get-ChatUiPatient $hwnd
+    if ($null -ne $req.title) {
+        $title = [string]$req.title
+        $row = @($ui.chats | Where-Object { $_.group -eq [string]$req.group -and $_.title -eq $title }) | Select-Object -First 1
+        if ($null -eq $row) { return @{ ok = $true; opened = $false } }
+        if ($ui.current -eq $title) { return @{ ok = $true; opened = $true } }
+        if (-not (Invoke-Button $row.el)) { return @{ ok = $true; opened = $false } }
+        for ($i = 0; $i -lt 50; $i++) {
+            Start-Sleep -Milliseconds 100
+            if ((Get-ChatUi $hwnd).current -eq $title) { Start-Sleep -Milliseconds 300; return @{ ok = $true; opened = $true } }
+        }
+        return @{ ok = $true; opened = $false }
+    }
+    $btn = $ui.newEls[[string]$req.group]
+    if ($null -eq $btn) { return @{ ok = $true; opened = $false } }
+    $before = $ui.current
+    if (-not (Invoke-Button $btn)) { return @{ ok = $true; opened = $false } }
+    if ($null -eq $before) { Start-Sleep -Milliseconds 500; return @{ ok = $true; opened = $true } } # already on an empty session
+    for ($i = 0; $i -lt 50; $i++) {
+        Start-Sleep -Milliseconds 100
+        if ((Get-ChatUi $hwnd).current -ne $before) { Start-Sleep -Milliseconds 300; return @{ ok = $true; opened = $true } }
+    }
+    return @{ ok = $true; opened = $false }
+}
+
 function Cmd-AtCursor {
     $w = [StubWin]::AtCursor()
     if ($null -eq $w) { return @{ ok = $true } }
@@ -406,6 +506,8 @@ while ($true) {
             'pasteInto' { $res = Paste-Into ([long]$req.hwnd) ([string]$req.title) $req }
             'atCursor' { $res = Cmd-AtCursor }
             'find' { $res = Cmd-Find $req }
+            'listChats' { $res = Cmd-ListChats $req }
+            'openChat' { $res = Cmd-OpenChat $req }
             'pasteImage' { $res = Cmd-PasteImage $req }
             'focus'  { $res = Cmd-Focus $req }
             default  { $res = @{ ok = $false; error = "unknown cmd" } }

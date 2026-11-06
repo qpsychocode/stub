@@ -1,6 +1,6 @@
 import { app, clipboard, ClipboardItem, type BrowserWindow } from 'electron'
 import { join } from 'node:path'
-import type { DropRequest, DropResult, HarnessTarget, SendRequest, SendResult } from '@shared/contract'
+import type { ChatList, DropRequest, DropResult, HarnessTarget, SendRequest, SendResult } from '@shared/contract'
 import { getImage } from './store'
 import { WinHelper, type PasteReply } from './winhelper.ts'
 
@@ -86,10 +86,25 @@ export class Harness {
     }
   }
 
+  async listChats(target: HarnessTarget): Promise<ChatList> {
+    try {
+      const hwnd = await this.helper.find({ processNames: target.processNames, titleIncludes: target.titleIncludes || undefined })
+      if (hwnd === null) return { found: false, chats: [], groups: [] }
+      return { found: true, ...(await this.helper.listChats(hwnd)) }
+    } catch {
+      return { found: false, chats: [], groups: [] }
+    }
+  }
+
   async send(req: SendRequest): Promise<SendResult> {
     try {
       const titleIncludes = req.target.titleIncludes || undefined
-      const hwnd = req.images.length > 0 ? await this.helper.find({ processNames: req.target.processNames, titleIncludes }) : null
+      const hwnd = req.images.length > 0 || req.chat ? await this.helper.find({ processNames: req.target.processNames, titleIncludes }) : null
+      if (req.chat && hwnd !== null && !(await this.helper.openChat({ hwnd, group: req.chat.group, title: req.chat.title }))) {
+        // Never paste into whichever chat happens to be open: the point is that it goes to the chosen one.
+        await clipboard.writeText(req.text)
+        return { outcome: 'chat-not-found', submitted: false }
+      }
       const r = await this.pasteVia(req.text, req.images, hwnd, req.returnFocus, () =>
         this.helper.paste({
           processNames: req.target.processNames,

@@ -152,7 +152,7 @@ export function VoiceCapsule({ d, asr, hotkey, voiceKey }: Props): JSX.Element {
                   readOnly={phase === 'starting'}
                   onChange={d.editTranscript}
                 />
-                <ImageStrip images={d.draft.images} onFiles={d.addImages} onRemove={d.removeImage} />
+                <ImageStrip thumbsOnly images={d.draft.images} onFiles={d.addImages} onRemove={d.removeImage} />
                 <div className="rec-actions">
                   <button type="button" className="btn is-primary" onClick={() => void d.stop()} disabled={phase !== 'recording'}>
                     {phase === 'finishing' ? <Loader2 size={14} strokeWidth={2} className="spin" /> : <Square size={12} strokeWidth={0} fill="currentColor" />}

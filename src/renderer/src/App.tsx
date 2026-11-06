@@ -232,11 +232,16 @@ export function App(): JSX.Element {
 
   const markSent = useCallback(
     (ticketId: string, target: HarnessTarget, submitted: boolean) => {
-      if (!stateRef.current.tickets.some((t) => t.id === ticketId)) return
-      dispatch({ type: 'sent', id: ticketId, record: { targetId: target.id, targetName: target.name, at: Date.now(), verified: true, submitted } })
+      const s = stateRef.current
+      const ticket = s.tickets.find((t) => t.id === ticketId)
+      if (!ticket) return
+      // Remember which chat took it, when the project names one.
+      const chat = s.projects.find((p) => p.id === ticket.projectId)?.chats?.[target.id]
+      const chatName = chat ? chat.title ?? tr('{0} · новая сессия', chat.group) : undefined
+      dispatch({ type: 'sent', id: ticketId, record: { targetId: target.id, targetName: target.name, at: Date.now(), verified: true, submitted, ...(chatName ? { windowTitle: chatName } : {}) } })
       setFlash(target.id)
       window.setTimeout(() => setFlash((cur) => (cur === target.id ? null : cur)), 1500)
-      toast({ kind: 'ok', label: tr('ОТПРАВЛЕНО'), text: tr('Отправлено в {0}{1}', target.name, submitted ? tr(' и запущено') : '') })
+      toast({ kind: 'ok', label: tr('ОТПРАВЛЕНО'), text: tr('Отправлено в {0}{1}', chatName ? `${target.name} · ${chatName}` : target.name, submitted ? tr(' и запущено') : '') })
     },
     [dispatch, toast]
   )
@@ -251,7 +256,8 @@ export function App(): JSX.Element {
       setSending({ ticketId, targetId })
       let res: SendResult
       try {
-        res = await api.harness.send({ ticketId, target, text: buildPrompt(ticket), images: (ticket.images ?? []).map((i) => i.id), returnFocus: s.settings.returnFocus })
+        const chat = s.projects.find((p) => p.id === ticket.projectId)?.chats?.[targetId]
+        res = await api.harness.send({ ticketId, target, chat, text: buildPrompt(ticket), images: (ticket.images ?? []).map((i) => i.id), returnFocus: s.settings.returnFocus })
       } catch (e) {
         res = { outcome: 'error', submitted: false, message: (e as Error).message }
       }
@@ -259,6 +265,9 @@ export function App(): JSX.Element {
       if (!stateRef.current.tickets.some((t) => t.id === ticketId)) return
       const manual = tr('Текст в буфере — вставь вручную (Ctrl+V)')
       switch (res.outcome) {
+        case 'chat-not-found':
+          toast({ kind: 'warn', label: target.name.toUpperCase(), text: tr('Не смог открыть чат проекта. {0}', manual) })
+          break
         case 'verified':
           markSent(ticketId, target, res.submitted)
           break
@@ -404,6 +413,8 @@ export function App(): JSX.Element {
               onAdd={(name) => dispatch({ type: 'project-add', project: { id: crypto.randomUUID(), name } })}
               onRename={(id, name) => dispatch({ type: 'project-rename', id, name })}
               onDelete={(id) => dispatch({ type: 'project-delete', id })}
+              targets={settings.targets}
+              onBindChat={(id, targetId, chat) => dispatch({ type: 'project-chat', id, targetId, chat })}
             />
           }
           rail={
@@ -411,6 +422,7 @@ export function App(): JSX.Element {
               targets={settings.targets}
               running={running}
               limits={limits}
+              chats={projects.find((p) => p.id === activeProjectId)?.chats}
               onSignInClaude={() => void api.limits.signInClaude().then(refreshLimits)}
               dragging={dragging}
               sendingTargetId={sending?.targetId ?? null}

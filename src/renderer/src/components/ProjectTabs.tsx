@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { AnimatePresence } from 'motion/react'
 import { Plus } from 'lucide-react'
-import type { Project } from '@shared/contract'
+import type { ChatBinding, ChatList, HarnessTarget, Project } from '@shared/contract'
+import { api } from '../api'
+import { Select } from './ui'
 import { Popover } from './Popover'
 import { tr } from '../lib/i18n'
 
@@ -15,6 +17,8 @@ interface Props {
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  targets: HarnessTarget[]
+  onBindChat: (id: string, targetId: string, chat: ChatBinding | null) => void
 }
 
 type Editing = { mode: 'edit'; id: string } | { mode: 'new' } | null
@@ -42,6 +46,7 @@ function Tab({ project, active, open, elRef, onActivate, onEdit }: TabProps): JS
       data-active={active}
       data-over={isOver}
       aria-pressed={active}
+      title={tr('Правый клик: название и чат для тикетов')}
       onClick={onActivate}
       onDoubleClick={onEdit}
       onContextMenu={(e) => {
@@ -55,10 +60,58 @@ function Tab({ project, active, open, elRef, onActivate, onEdit }: TabProps): JS
   )
 }
 
-function ProjectEditor({ initial, isNew, deleteBlock, onSave, onDelete, onClose }: {
+/** One row per app with a window: which of its chats this project's tickets go to. */
+function ChatPicker({ project, targets, onBind }: { project: Project; targets: HarnessTarget[]; onBind: (targetId: string, chat: ChatBinding | null) => void }): JSX.Element {
+  const [lists, setLists] = useState<Record<string, ChatList> | null>(null)
+  useEffect(() => {
+    let alive = true
+    void Promise.all(targets.map(async (t) => [t.id, await api.harness.listChats(t)] as const)).then((r) => alive && setLists(Object.fromEntries(r)))
+    return () => {
+      alive = false
+    }
+  }, [targets])
+  const encode = (c: ChatBinding | null | undefined): string => (c ? JSON.stringify([c.group, c.title]) : '')
+  const shown = targets.filter((t) => lists?.[t.id]?.found || project.chats?.[t.id])
+  return (
+    <div className="field">
+      <span className="field-label">{tr('Куда отправлять тикеты')}</span>
+      {!lists && <div className="path-line">{tr('Ищу чаты…')}</div>}
+      {lists && shown.length === 0 && <div className="path-line">{tr('Открой Claude или Codex, чтобы выбрать чат')}</div>}
+      {shown.map((t) => {
+        const list = lists?.[t.id]
+        const bound = project.chats?.[t.id]
+        const options = [
+          { value: '', label: tr('Чат, открытый сейчас') },
+          ...(list?.groups ?? []).map((g) => ({ value: encode({ group: g, title: null }), label: tr('{0} · новая сессия', g) })),
+          ...(list?.chats ?? []).map((c) => ({ value: encode(c), label: `${c.group} · ${c.title}` }))
+        ]
+        if (bound && !options.some((o) => o.value === encode(bound))) options.push({ value: encode(bound), label: `${bound.group} · ${bound.title ?? tr('новая сессия')}` })
+        return (
+          <div key={t.id} className="chat-row">
+            <span className="chat-target">{t.name}</span>
+            <Select
+              label={t.name}
+              value={encode(bound)}
+              options={options}
+              onChange={(v) => {
+                if (!v) return onBind(t.id, null)
+                const [group, title] = JSON.parse(v) as [string, string | null]
+                onBind(t.id, { group, title })
+              }}
+            />
+            {list?.found && list.chats.length === 0 && <div className="path-line">{tr('Чаты не видны: открой боковую панель приложения')}</div>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function ProjectEditor({ initial, isNew, deleteBlock, chats, onSave, onDelete, onClose }: {
   initial: string
   isNew: boolean
   deleteBlock: string | null
+  chats: JSX.Element | null
   onSave: (name: string) => void
   onDelete: () => void
   onClose: () => void
@@ -78,6 +131,7 @@ function ProjectEditor({ initial, isNew, deleteBlock, onSave, onDelete, onClose 
         <span className="field-label">{tr('Название')}</span>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={32} autoFocus spellCheck={false} />
       </label>
+      {chats}
       {!isNew && deleteBlock && <p className="pop-text">{deleteBlock}</p>}
       <div className="pop-actions">
         {!isNew && (
@@ -97,7 +151,7 @@ function ProjectEditor({ initial, isNew, deleteBlock, onSave, onDelete, onClose 
   )
 }
 
-export function ProjectTabs({ projects, activeId, counts, onActivate, onAdd, onRename, onDelete }: Props): JSX.Element {
+export function ProjectTabs({ projects, activeId, counts, onActivate, onAdd, onRename, onDelete, targets, onBindChat }: Props): JSX.Element {
   const els = useRef<Record<string, HTMLElement | null>>({})
   const addRef = useRef<HTMLButtonElement>(null)
   const [editing, setEditing] = useState<Editing>(null)
@@ -127,11 +181,12 @@ export function ProjectTabs({ projects, activeId, counts, onActivate, onAdd, onR
 
       <AnimatePresence>
         {editing && (edited || editing.mode === 'new') && (
-          <Popover key={editing.mode === 'edit' ? editing.id : 'new'} anchor={edited ? els.current[edited.id] ?? null : addRef.current} placement="bottom-end" width={300} onClose={() => setEditing(null)}>
+          <Popover key={editing.mode === 'edit' ? editing.id : 'new'} anchor={edited ? els.current[edited.id] ?? null : addRef.current} placement="bottom-end" width={340} onClose={() => setEditing(null)}>
             <ProjectEditor
               initial={edited?.name ?? ''}
               isNew={editing.mode === 'new'}
               deleteBlock={deleteBlock}
+              chats={edited ? <ChatPicker project={edited} targets={targets} onBind={(targetId, chat) => onBindChat(edited.id, targetId, chat)} /> : null}
               onClose={() => setEditing(null)}
               onSave={(name) => {
                 if (edited) onRename(edited.id, name)
